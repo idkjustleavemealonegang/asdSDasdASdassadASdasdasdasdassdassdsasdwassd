@@ -185,7 +185,7 @@
       <!-- SELF -->
       <ul class="submenu" id="self-submenu" data-menuid="SELF">
         <li class="section">Movement</li>
-        <li data-type="toggle" data-feature="Noclip" id="noclip-toggle"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Noclip"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li data-type="toggle" data-feature="Godmode"><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li data-type="toggle" data-feature="Infinite Stamina"><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
 
@@ -434,11 +434,7 @@
 
       const featureName = (li.dataset.feature || "").toLowerCase();
 
-      sendToLua({
-        action: "toggle",
-        feature: featureName,
-        state: newState
-      });
+      sendToLua({ action: "toggleFeature", feature: featureName, enabled: (newState === "on") });
 
       if (featureName === "noclip") {
         if (newState === "on") notify("NoClip enabled (U to toggle)","ok");
@@ -634,17 +630,5 @@
     requestAnimationFrame(init);
   })();
   </script>
-
-  <script>
-  document.querySelector("#noclip-toggle").addEventListener("change", function() {
-      console.log("Noclip toggle changed: " + this.checked);
-      window.postMessage({
-          action: "toggleFeature",
-          feature: "noclip",
-          enabled: this.checked
-      }, "*");
-  });
-  </script>
-
 </body>
 </html>
