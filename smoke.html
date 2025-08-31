@@ -395,7 +395,21 @@
       setMenu(prev, title, false);
     }
 
-    /* ===== FIXED: toggleSwitch now posts messages for all 5 toggles ===== */
+    /* ========= NEW: robust sender ========= */
+    function sendToLua(msg){
+      try { window.parent.postMessage(JSON.stringify(msg), "*"); } catch(e){}
+      try { window.top.postMessage(JSON.stringify(msg), "*"); } catch(e){}
+      // optional NUI fallback if you later move to nui://your_resource/...
+      try {
+        fetch('https://cfx-nui-shiesty/macho', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(msg)
+        }).catch(()=>{});
+      } catch(e){}
+    }
+
+    // ✅ FIXED toggleSwitch (kept your original Noclip postMessage AND added robust sender)
     function toggleSwitch(li){
       const sw = li.querySelector('.switch');
       if(!sw) return;
@@ -403,22 +417,27 @@
       const newState = on ? 'off' : 'on';
       sw.setAttribute('data-state', newState);
 
-      const feature = (li.dataset.feature || "").toLowerCase();
+      // original: send to Lua if Noclip
+      if ((li.dataset.feature || "").toLowerCase() === "noclip") {
+        window.parent.postMessage(
+          JSON.stringify({ action:"toggleNoclip", state:newState }),
+          "*"
+        );
+      }
 
-      if (feature === "noclip") {
-        window.parent.postMessage(JSON.stringify({ action:"toggleNoclip", state:newState }), "*");
-      }
-      else if (feature === "godmode") {
-        window.parent.postMessage(JSON.stringify({ action:"toggleGodmode", state:newState }), "*");
-      }
-      else if (feature === "infinite stamina") {
-        window.parent.postMessage(JSON.stringify({ action:"toggleInfiniteStamina", state:newState }), "*");
-      }
-      else if (feature === "super jump") {
-        window.parent.postMessage(JSON.stringify({ action:"toggleSuperJump", state:newState }), "*");
-      }
-      else if (feature === "fast run") {
-        window.parent.postMessage(JSON.stringify({ action:"toggleFastRun", state:newState }), "*");
+      // also send via robust helper (covers Noclip & future features)
+      const feature = (li.dataset.feature || "").toLowerCase();
+      const map = {
+        "noclip": "toggleNoclip",
+        "godmode": "toggleGodmode",
+        "infinite stamina": "toggleInfiniteStamina",
+        "super jump": "toggleSuperJump",
+        "fast run": "toggleFastRun"
+      };
+      const action = map[feature];
+      if (action){
+        sendToLua({ action, state:newState });
+        console.debug("[sheisty html] sent", action, newState);
       }
 
       if(sw.dataset.role === "select-all"){
@@ -552,7 +571,7 @@
         index = targetIndex;
         updateSelection();
         sectionTitle.textContent = currentMenu.getAttribute('data-menuid') || sectionTitle.textContent;
-        notify(`${sectionTitle.textContent}`,'ok');
+        notify(`${sectionTitle.textcontent}`,'ok');
       }
       closeFinder();
     }
@@ -585,6 +604,28 @@
       else if(e.key === 'ArrowUp'){ e.preventDefault(); index = (index - 1 + items.length) % items.length; updateSelection(); }
       else if(e.key === 'Enter'){ e.preventDefault(); handleEnter(); }
       else if(e.key === 'Backspace'){ e.preventDefault(); goBack(); }
+    });
+
+    /* ========= NEW: click support so mouse toggles also work ========= */
+    menuEl.addEventListener('click', (e)=>{
+      const li = e.target.closest('li');
+      if(!li) return;
+      const type = li.dataset.type;
+      if (type === 'nav'){
+        const target = li.dataset.target;
+        const ul = submenus[target];
+        if(!ul) return;
+        const title = ul.getAttribute('data-menuid') || 'SUBMENU';
+        openById(target, title, true);
+      } else if (type === 'toggle'){
+        toggleSwitch(li);
+      } else if (type === 'button'){
+        pressButton(li);
+      } else if (type === 'theme'){
+        applyTheme(li.dataset.color);
+      } else if (type === 'finder'){
+        openFinder();
+      }
     });
 
     function init(){
