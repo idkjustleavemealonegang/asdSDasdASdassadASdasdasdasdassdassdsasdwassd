@@ -414,6 +414,7 @@
 
     const featureIndex = {};
     function registerFeatures() {
+      console.log('[DEBUG] Registering features');
       const allMenus = [mainMenu, ...Object.values(submenus)];
       allMenus.forEach(ul => {
         const menuId = ul.getAttribute('data-menuid') || 'HOME';
@@ -445,6 +446,7 @@
     }
 
     function updateSelection() {
+      console.log('[DEBUG] Updating selection, index:', index);
       items.forEach(li => li.classList.remove('selected'));
       if (items[index]) items[index].classList.add('selected');
       footerCount.textContent = `${Math.min(index + 1, items.length)}/${items.length}`;
@@ -460,6 +462,7 @@
     }
 
     function setMenu(ul, title, pushHistory = true) {
+      console.log('[DEBUG] Setting menu:', title);
       if (pushHistory) {
         navStack.push(currentMenu);
       }
@@ -513,6 +516,7 @@
     }
 
     function applyTheme(color) {
+      console.log('[DEBUG] Applying theme:', color);
       const root = document.documentElement;
       const map = {
         blue: { main: '#2e82ff', glow: '#66a3ff' },
@@ -534,6 +538,7 @@
     }
 
     function handleEnter() {
+      console.log('[DEBUG] Handling enter, index:', index);
       const li = items[index];
       if (!li) return;
       const type = li.dataset.type;
@@ -566,6 +571,7 @@
     }
 
     function notify(msg, kind = 'ok') {
+      console.log('[DEBUG] Notify:', msg, kind);
       const note = document.createElement('div');
       note.className = `notification ${kind}`;
       note.textContent = msg;
@@ -578,17 +584,20 @@
     }
 
     function openFinder() {
+      console.log('[DEBUG] Opening finder');
       finder.style.display = 'block';
       finderInput.value = '';
       finderInput.focus();
     }
 
     function closeFinder() {
+      console.log('[DEBUG] Closing finder');
       finder.style.display = 'none';
       menuEl.focus();
     }
 
     function findAndJump(q) {
+      console.log('[DEBUG] Finding feature:', q);
       const key = q.trim().toLowerCase();
       if (!key) { closeFinder(); return; }
       const entry = featureIndex[key];
@@ -633,21 +642,29 @@
     // Handle DUI messages from Lua
     window.addEventListener('message', (event) => {
       const data = event.data;
+      console.log('[DEBUG] Received DUI message:', JSON.stringify(data));
       if (data.action === 'init') {
         init();
       } else if (data.action === 'navigate') {
         if (finder.style.display === 'block') return; // Ignore navigation if finder is open
         if (data.direction === 'up') {
+          console.log('[DEBUG] Navigating up');
           index = (index - 1 + items.length) % items.length;
           updateSelection();
         } else if (data.direction === 'down') {
+          console.log('[DEBUG] Navigating down');
           index = (index + 1) % items.length;
           updateSelection();
         }
+      } else if (data.action === 'enter') {
+        console.log('[DEBUG] Handling enter from DUI');
+        handleEnter();
       }
     });
 
+    // Handle native key events
     document.addEventListener('keydown', e => {
+      console.log('[DEBUG] Keydown event:', e.key);
       if (finder.style.display === 'block') {
         if (e.key === 'Escape') { e.preventDefault(); closeFinder(); }
         else if (e.key === 'Enter') { e.preventDefault(); findAndJump(finderInput.value); }
@@ -660,6 +677,7 @@
     });
 
     function init() {
+      console.log('[DEBUG] Initializing menu');
       if (window.lucide && lucide.createIcons) lucide.createIcons();
       openMain();
       items = visibleItems(currentMenu);
