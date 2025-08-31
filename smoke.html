@@ -280,16 +280,18 @@
   <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
   <script>
   /* ========= DUI <-> LUA BRIDGE =========
-     FIX: Added a DUI callback via fetch('https://ui2lua', ...) so Lua receives events.
+     FIX FOR YOUR BUILD: use window.postMessage so Lua receives onDuiMessage.
   */
   function sendToLua(obj){
     const msg = JSON.stringify(obj);
-    // (1) Macho/other wrappers might hook this, keep it:
+
+    // ✅ Old DUI builds: this triggers Lua's onDuiMessage
+    try { window.postMessage(msg, "*"); } catch(e){}
+
+    // Keep your previous fallbacks (harmless):
     window.dispatchEvent(new MessageEvent("message", { data: msg }));
-    // (2) WRONG direction for most frameworks, but keep as fallback:
     try { if (typeof SendDuiMessage === "function") SendDuiMessage(msg); } catch(e){}
     try { if (window.macho && typeof window.macho.send === "function") window.macho.send(msg); } catch(e){}
-    // (3) ✅ Correct path for DUI → Lua:
     try {
       if (typeof fetch === "function") {
         fetch("https://ui2lua", {
@@ -299,7 +301,7 @@
         });
       }
     } catch(e){}
-    // local debug:
+
     console.log("[DUI->LUA]", msg);
   }
 
@@ -429,7 +431,6 @@
         state: newState
       });
 
-      // Special-case UX for NoClip to mirror your Lua notifications
       if (featureName === "noclip") {
         if (newState === "on") notify("NoClip enabled (U to toggle)","ok");
         else notify("NoClip disabled","ok");
@@ -571,7 +572,7 @@
         index = targetIndex;
         updateSelection();
         sectionTitle.textContent = currentMenu.getAttribute('data-menuid') || sectionTitle.textContent;
-        notify(`${sectionTitle.textContent}`,'ok');
+        notify(`${sectionTitle.textcontent}`,'ok');
       }
       closeFinder();
     }
