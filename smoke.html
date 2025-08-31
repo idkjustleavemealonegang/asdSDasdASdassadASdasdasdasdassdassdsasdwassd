@@ -17,11 +17,11 @@
 
   html, body{ height:100%; margin:0; overflow:hidden; }
   body{
-    background: transparent;               /* transparent page bg */
+    background: transparent;
     display:flex; align-items:flex-start; justify-content:flex-start;
     font-family:sans-serif;
     user-select:none; -webkit-user-select:none;
-    padding:70px 24px 24px;                /* push menu down a bit */
+    padding:70px 24px 24px;
   }
 
   .menu-wrapper{ position:relative; display:inline-block; margin-left:24px; }
@@ -43,7 +43,6 @@
     background:#000000dc; color:#fff; outline:none; position:relative;
   }
 
-  /* Banner/header uses provided image + gradient overlay */
   .menu-header{
     height:120px; padding:0;
     background:
@@ -63,9 +62,8 @@
     padding:var(--li-pad-y) var(--li-pad-x);
     display:flex; align-items:center; gap:8px; justify-content:space-between;
     font-size:13px; line-height:1.35;
-    transition: background .15s ease, outline-color .15s ease; /* no font grow */
+    transition: background .15s ease, outline-color .15s ease;
   }
-  /* prevent hover scaling/growing */
   .menu-list li:hover, .submenu li:hover{ font-size:13px; }
 
   .menu-list li.selected, .submenu li.selected{
@@ -118,7 +116,6 @@
     font-weight:600; text-align:left; flex:1;
   }
 
-  /* Notifications (bigger, gradient purple / red) */
   .notification-container{
     position:fixed; top:50%; right:20px; transform:translateY(-50%);
     display:flex; flex-direction:column; gap:10px; z-index:9999;
@@ -139,7 +136,6 @@
   }
   .notification.show{ opacity:1; transform:translateX(0); }
 
-  /* Finder (bottom-center, smaller, black bg, bold text) */
   .finder{
     position:fixed; left:50%; bottom:11%; transform:translateX(-50%);
     width:min(45vw, 520px); min-width:360px; display:none; z-index:10000; text-align:left;
@@ -218,7 +214,7 @@
         <li data-type="button" data-feature="Copy Appearance"><div class="feature-btn">Copy Appearance</div></li>
       </ul>
 
-      <!-- COMBAT/WEAPON (placeholder items to keep structure) -->
+      <!-- COMBAT/WEAPON -->
       <ul class="submenu" id="combat-submenu" data-menuid="COMBAT/WEAPON">
         <li data-type="toggle" data-feature="Aimbot"><span class="left-content">Aimbot</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li data-type="toggle" data-feature="No Recoil"><span class="left-content">No Recoil</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
@@ -318,10 +314,9 @@
     let items = [];
     let index = 0;
 
-    const lastIndexById = {};   // remember cursor per menu
-    const navStack = [];        // remember history for goBack
+    const lastIndexById = {};
+    const navStack = [];
 
-    // Build searchable index of features -> path (menu id chain)
     const featureIndex = {};
     function registerFeatures() {
       const allMenus = [mainMenu, ...Object.values(submenus)];
@@ -330,14 +325,9 @@
         [...ul.querySelectorAll('li')].forEach(li=>{
           const t = (li.dataset.feature || li.textContent || '').trim().toLowerCase();
           if (!t) return;
-
-          // Determine path to this LI
-          // Hardcode nested paths we know about
           let path = [menuId];
-          // if in ONLINE, could be list or features
           if (menuId === 'ONLINE > LIST') path = ['ONLINE','ONLINE > LIST'];
           if (menuId === 'ONLINE > FEATURES') path = ['ONLINE','ONLINE > FEATURES'];
-
           featureIndex[t] = { path, li };
         });
       });
@@ -351,18 +341,19 @@
       track.style.top = currentMenu.offsetTop + "px";
       track.style.height = currentMenu.offsetHeight + "px";
     }
+
     function updateCapsule(){
       const li = items[index];
       if(!li) return;
       const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
       capsule.style.top = top + 'px';
     }
+
     function updateSelection(){
       items.forEach(li => li.classList.remove('selected'));
       if (items[index]) items[index].classList.add('selected');
       footerCount.textContent = `${Math.min(index+1, items.length)}/${items.length}`;
       updateTrack(); updateCapsule();
-      // remember position per menu
       const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || 'HOME';
       lastIndexById[id] = index;
     }
@@ -409,7 +400,6 @@
       if(!sw) return;
       const on = sw.getAttribute('data-state') === 'on';
       sw.setAttribute('data-state', on ? 'off' : 'on');
-
       if(sw.dataset.role === "select-all"){
         document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
         notify("All players selected","ok");
@@ -438,8 +428,6 @@
       const sel = map[color] || map.restore;
       root.style.setProperty('--theme-main', sel.main);
       root.style.setProperty('--theme-glow', sel.glow);
-      // derive selection bg from main
-      // crude parse hex -> rgba alpha .22
       function hexToRgb(h){
         const s = h.replace('#','');
         const n = s.length===3 ? s.split('').map(x=>x+x).join('') : s;
@@ -453,9 +441,7 @@
     function handleEnter(){
       const li = items[index];
       if(!li) return;
-
       const type = li.dataset.type;
-
       if(currentMenu === mainMenu){
         if(type === 'nav'){
           const target = li.dataset.target;
@@ -483,7 +469,6 @@
       }
     }
 
-    // Notifications
     function notify(msg, kind='ok'){
       const note = document.createElement('div');
       note.className = `notification ${kind}`;
@@ -496,18 +481,19 @@
       },2200);
     }
 
-    // Finder
     function openFinder(){
       finder.style.display = 'block';
       finderInput.value = '';
       finderInput.focus();
       window.parent.postMessage(JSON.stringify({action:"startTyping"}), "*");
     }
+
     function closeFinder(){
       finder.style.display = 'none';
       menuEl.focus();
       window.parent.postMessage(JSON.stringify({action:"stopTyping"}), "*");
     }
+
     function findAndJump(q){
       const key = q.trim().toLowerCase();
       if(!key){ closeFinder(); return; }
@@ -517,7 +503,6 @@
         closeFinder();
         return;
       }
-      // Navigate path
       openMain();
       if (entry.path.includes('ONLINE')) {
         openById('online-submenu','ONLINE', true);
@@ -540,19 +525,34 @@
       } else if (entry.path[0] === 'SETTINGS') {
         openById('settings-submenu','SETTINGS', true);
       }
-
-      // select the specific LI in currentMenu
       const lis = visibleItems(currentMenu);
       const targetIndex = lis.findIndex(li => (li.dataset.feature||li.textContent).trim().toLowerCase() === key);
       if (targetIndex >= 0) {
         index = targetIndex;
         updateSelection();
-        // Show breadcrumb in pill
         sectionTitle.textContent = currentMenu.getAttribute('data-menuid') || sectionTitle.textContent;
         notify(`${sectionTitle.textContent}`,'ok');
       }
       closeFinder();
     }
+
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+      if(data.action === "navigate") {
+        if(data.direction === "up") {
+          index = (index - 1 + items.length) % items.length;
+          updateSelection();
+        }
+        if(data.direction === "down") {
+          index = (index + 1) % items.length;
+          updateSelection();
+        }
+      } else if(data.action === "enter") {
+        handleEnter();
+      } else if(data.action === "back") {
+        goBack();
+      }
+    });
 
     document.addEventListener('keydown', e=>{
       if(finder.style.display === 'block'){
@@ -567,23 +567,16 @@
     });
 
     function init(){
-      // icons
       if (window.lucide && lucide.createIcons) lucide.createIcons();
-      // start on HOME
       openMain();
-      // initial items list
       items = visibleItems(currentMenu);
       index = 0; updateSelection();
-      // build feature index for finder
       registerFeatures();
-      // focus for keyboard nav
       menuEl.setAttribute('tabindex','0');
       menuEl.focus();
-      // keep indicator aligned
       window.addEventListener('resize', updateSelection);
     }
 
-    // Kick off after paint
     requestAnimationFrame(init);
   })();
   </script>
