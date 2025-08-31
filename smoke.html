@@ -395,11 +395,22 @@
       setMenu(prev, title, false);
     }
 
+    // ✅ FIXED toggleSwitch
     function toggleSwitch(li){
       const sw = li.querySelector('.switch');
       if(!sw) return;
       const on = sw.getAttribute('data-state') === 'on';
-      sw.setAttribute('data-state', on ? 'off' : 'on');
+      const newState = on ? 'off' : 'on';
+      sw.setAttribute('data-state', newState);
+
+      // send to Lua if Noclip
+      if ((li.dataset.feature || "").toLowerCase() === "noclip") {
+        window.parent.postMessage(
+          JSON.stringify({ action:"toggleNoclip", state:newState }),
+          "*"
+        );
+      }
+
       if(sw.dataset.role === "select-all"){
         document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
         notify("All players selected","ok");
