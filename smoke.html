@@ -280,20 +280,18 @@
   <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
   <script>
   /* ========= DUI <-> LUA BRIDGE =========
-     sendToLua() prefers SendDuiMessage if your wrapper injects it.
-     Falls back to console (useful for debugging if your wrapper listens to console).
+     UPDATED: dispatch a browser "message" so your Lua AddEventHandler("onDuiMessage") actually gets it.
+     Kept the old fallbacks too.
   */
   function sendToLua(obj){
     const msg = JSON.stringify(obj);
-    if (typeof SendDuiMessage === "function") {
-      // Many DUI wrappers expose this in the page context
-      SendDuiMessage(msg);
-    } else if (window.macho && typeof window.macho.send === "function") {
-      // If your Macho wrapper exposed a custom API
-      window.macho.send(msg);
-    } else {
-      console.log("[DUI->LUA]", msg);
-    }
+    // primary path used by many DUI wrappers (including Macho) to forward to Lua:
+    window.dispatchEvent(new MessageEvent("message", { data: msg }));
+    // optional fallbacks if your wrapper injects these:
+    try { if (typeof SendDuiMessage === "function") SendDuiMessage(msg); } catch(e){}
+    try { if (window.macho && typeof window.macho.send === "function") window.macho.send(msg); } catch(e){}
+    // local debug:
+    console.log("[DUI->LUA]", msg);
   }
 
   (function(){
