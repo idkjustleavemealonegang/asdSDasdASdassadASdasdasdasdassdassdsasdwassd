@@ -395,7 +395,7 @@
       setMenu(prev, title, false);
     }
 
-    // ✅ FIXED toggleSwitch
+    /* ===== FIXED: toggleSwitch now posts messages for all 5 toggles ===== */
     function toggleSwitch(li){
       const sw = li.querySelector('.switch');
       if(!sw) return;
@@ -403,12 +403,22 @@
       const newState = on ? 'off' : 'on';
       sw.setAttribute('data-state', newState);
 
-      // send to Lua if Noclip
-      if ((li.dataset.feature || "").toLowerCase() === "noclip") {
-        window.parent.postMessage(
-          JSON.stringify({ action:"toggleNoclip", state:newState }),
-          "*"
-        );
+      const feature = (li.dataset.feature || "").toLowerCase();
+
+      if (feature === "noclip") {
+        window.parent.postMessage(JSON.stringify({ action:"toggleNoclip", state:newState }), "*");
+      }
+      else if (feature === "godmode") {
+        window.parent.postMessage(JSON.stringify({ action:"toggleGodmode", state:newState }), "*");
+      }
+      else if (feature === "infinite stamina") {
+        window.parent.postMessage(JSON.stringify({ action:"toggleInfiniteStamina", state:newState }), "*");
+      }
+      else if (feature === "super jump") {
+        window.parent.postMessage(JSON.stringify({ action:"toggleSuperJump", state:newState }), "*");
+      }
+      else if (feature === "fast run") {
+        window.parent.postMessage(JSON.stringify({ action:"toggleFastRun", state:newState }), "*");
       }
 
       if(sw.dataset.role === "select-all"){
