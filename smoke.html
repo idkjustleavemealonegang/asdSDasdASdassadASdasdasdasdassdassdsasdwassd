@@ -412,11 +412,19 @@
       const newState = on ? 'off' : 'on';
       sw.setAttribute('data-state', newState);
 
+      const featureName = (li.dataset.feature || "").toLowerCase();
+
       sendToLua({
         action: "toggle",
-        feature: (li.dataset.feature || "").toLowerCase(),
+        feature: featureName,
         state: newState
       });
+
+      // Special-case UX for NoClip to mirror your Lua notifications
+      if (featureName === "noclip") {
+        if (newState === "on") notify("NoClip enabled (U to toggle)","ok");
+        else notify("NoClip disabled","ok");
+      }
 
       if(sw.dataset.role === "select-all"){
         document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
@@ -579,6 +587,8 @@
       } else if(data.action === "back") {
         goBack();
       }
+      // Optional: if your Lua echoes toggles back, you could react here too.
+      // else if (data.action === "toggle" && data.feature === "noclip") { ... }
     });
 
     document.addEventListener('keydown', e=>{
