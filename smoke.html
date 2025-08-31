@@ -5,33 +5,28 @@
   <title>Menu System</title>
   <style>
     :root{
-      --accent: #d400ff;
-      --glowA: #ff00c8;
-      --glowB: rgba(248,0,236,0.56);
-      --sel-bg: rgba(212,0,255,0.54);
+      --sel-bg: #d400ff8a;
       --sel-border: 1px solid #d400ff;
       --li-pad-y: 4px;
       --li-pad-x: 8px;
       --icon-size: 16px;
     }
 
-    /* no selecting */
-    .menu, .menu * { user-select:none; -webkit-user-select:none; }
-
     body{
-      background:transparent; /* transparent */
+      background:transparent;            /* black background */
       margin:0;
       height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start; /* keep menu left */
       font-family:sans-serif;
+      user-select:none;           /* prevent highlight */
     }
 
-    /* keep menu on the left */
     .menu-wrapper{
-      position:fixed;
-      left:48px;
-      top:50%;
-      transform:translateY(-50%);
+      position:relative;
       display:inline-block;
+      margin-left:40px; /* left offset */
     }
 
     .side-indicator-track{
@@ -53,7 +48,7 @@
       height:20px;
       background:#c300ffbe;
       border-radius:10px;
-      box-shadow:0 0 6px var(--glowA), 0 0 12px var(--glowB);
+      box-shadow:0 0 6px #ff00c8, 0 0 12px #f800ec8e;
       transition:top .18s ease;
       pointer-events:none;
     }
@@ -68,34 +63,13 @@
       position:relative;
     }
 
-    /* RECREATED HEADER/BANNER (no image) */
     .menu-header{
-      position:relative;
-      height:120px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(90deg,#7a00ff 0%, #b100ff 50%, #e100ff 100%);
+      background:#000;
+      padding:0;
     }
-    .menu-header::before,
-    .menu-header::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        repeating-linear-gradient( to right,
-          rgba(255,255,255,0.06) 0 2px,
-          transparent 2px 8px );
-      mix-blend-mode:screen;
-      opacity:.35;
-      pointer-events:none;
-    }
-    .menu-header .title{
-      font-size:28px;
-      font-weight:900;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      text-shadow:0 0 10px #d600ff, 0 0 22px #7a00ff;
+    .menu-header img{
+      width:100%;
+      display:block;
     }
 
     .menu-pill-container{
@@ -104,6 +78,7 @@
       border-bottom:1px solid rgba(255,255,255,.15);
       text-align:center;
     }
+
     .menu-pill{
       font-size:13px;
       font-weight:700;
@@ -123,18 +98,15 @@
       align-items:center;
       gap:8px;
       justify-content:space-between;
-      pointer-events:none; /* keyboard nav only */
+      pointer-events:none; /* keyboard-only; hover doesn't change size */
       font-size:13px;
     }
-
-    /* no hover grow anywhere */
-    .menu-list li:hover, .submenu li:hover { transform:none; }
 
     .menu-list li.selected, .submenu li.selected{
       background:var(--sel-bg);
       border:var(--sel-border);
       border-radius:8px;
-      box-shadow:0 0 3px var(--accent), 0 0 1px var(--accent);
+      box-shadow:0 0 3px #d000fa, 0 0 1px #d400ff;
     }
 
     .left-content{
@@ -144,7 +116,10 @@
       font-weight:600;
     }
 
-    .arrow{ font-size:17px; opacity:0.7; }
+    .arrow{
+      font-size:17px;
+      opacity:0.7;
+    }
 
     .menu-list li svg.lucide, .submenu li svg.lucide{
       width:var(--icon-size)!important;
@@ -165,7 +140,11 @@
       justify-content:space-between;
       align-items:center;
     }
-    .menu-footer .right{ opacity:.8; font-style:italic; }
+
+    .menu-footer .right{
+      opacity:.8;
+      font-style:italic;
+    }
 
     .submenu{ display:none; }
 
@@ -193,16 +172,25 @@
       transition:left .18s ease;
     }
     .switch .mark{ font-size:12px; line-height:1; color:#000; }
-    .switch[data-state="on"]{ background:var(--accent); border-color:#ffffff; }
+    .switch[data-state="on"]{ background:#ff00ea; border-color:#ffffff; }
     .switch[data-state="on"] .knob{ left:20px; }
     .switch[data-state="on"] .mark{ display:none; }
 
     .submenu .section{
-      display:flex; align-items:center; justify-content:center;
-      font-size:11px; font-weight:600; opacity:.8; margin:6px 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:600;
+      opacity:0.8;
+      margin:6px 0;
     }
-    .submenu .section::before, .submenu .section::after{
-      content:""; flex:1; border-bottom:1px solid rgba(255,255,255,0.2); margin:0 6px;
+    .submenu .section::before,
+    .submenu .section::after{
+      content:"";
+      flex:1;
+      border-bottom:1px solid rgba(255,255,255,0.2);
+      margin:0 6px;
     }
 
     .revive-btn, .feature-btn{
@@ -215,7 +203,7 @@
       flex:1;
     }
 
-    /* Notifications (bigger + gradient) */
+    /* Notifications */
     .notification-container{
       position:fixed;
       top:50%;
@@ -223,85 +211,80 @@
       transform:translateY(-50%);
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:8px;
       z-index:9999;
-      pointer-events:none;
     }
     .notification{
+      background: linear-gradient(90deg,#6a00ff,#b300ff); /* purple gradient */
       color:#fff;
-      padding:12px 18px;
+      padding:12px 20px;
       border-radius:10px;
-      box-shadow:0 10px 28px rgba(0,0,0,0.45);
-      font-size:14px;
-      font-weight:800;
-      letter-spacing:.3px;
+      box-shadow:0 0 12px rgba(0,0,0,0.8);
+      font-size:15px;
+      font-weight:700;
       opacity:0;
       transform:translateX(120%);
-      transition:all 0.25s ease;
-      border:1px solid rgba(255,255,255,0.15);
-      text-shadow:0 1px 2px rgba(0,0,0,0.4);
+      transition:all 0.3s ease;
     }
-    .notification.show{ opacity:1; transform:translateX(0); }
-    .notification.ok{
-      background:linear-gradient(90deg, rgba(140,0,255,.95), rgba(220,0,255,.92));
+    .notification.error{
+      background: linear-gradient(90deg,#ff0033,#ff5555); /* red for not found */
     }
-    .notification.err{
-      background:linear-gradient(90deg, rgba(230,0,70,.95), rgba(255,80,80,.92));
+    .notification.show{
+      opacity:1;
+      transform:translateX(0);
     }
 
-    /* Bottom-center Find Feature box (black, smaller, bold typing) */
+    /* === Bottom-center "Find Feature" box (smaller, black background, bold smaller text) === */
     .finder {
       position: fixed;
       left: 50%;
       bottom: 11%;
       transform: translateX(-50%);
-      width: min(50vw, 700px);
+      width: min(50vw, 700px);  /* smaller */
       min-width: 420px;
-      display: none; /* show on demand */
+      display: none;            /* shown on demand */
       z-index: 10000;
       text-align: left;
     }
     .finder .panel{
-      background: rgba(0, 0, 0, 0.87);
-      border-radius: 1px;
-      padding: 4px 4px 4px;
+      background: rgba(0,0,0,0.95);   /* black background */
+      border-radius: 10px;
+      padding: 10px 14px 16px;
     }
-    .finder .label{
-      font-size:14px;
-      color:#ddd;
-      margin-left:6px;
-      text-transform:capitalize;
+    .finder .label {
+      font-size: 14px;
+      color: #ddd;
+      margin-left: 6px;
+      text-transform: lowercase;
     }
-    .finder .line{
-      height:3px;
-      background:linear-gradient(90deg,#9c00ff,#d000ff);
-      margin:6px 0 8px;
-      width:100%;
+    .finder .line {
+      height: 3px;
+      background: linear-gradient(90deg,#9c00ff,#d000ff);
+      margin: 6px 0 8px;
+      width: 100%;
     }
-    .finder input{
-      width:100%;
-      background:transparent;
-      border:none;
-      outline:none;
-      color:#fff;
-      font-weight:700;  /* bold typing */
-      font-size:18px;   /* smaller text */
-      text-align:left;
-      letter-spacing:.3px;
+    .finder input {
+      width: 100%;
+      background: transparent;
+      border: none;          /* no border */
+      outline: none;
+      color: #fff;
+      font-weight: 700;      /* bold typing */
+      font-size: 20px;       /* smaller text */
+      text-align: center;
+      letter-spacing: .3px;
     }
-    .finder input::placeholder{ color:#ffffff; opacity:.95; }
+    .finder input::placeholder { color:#ffffff; opacity:.95; }
   </style>
 </head>
 <body>
   <div class="menu-wrapper">
     <div class="side-indicator-track" id="track"></div>
     <div class="side-indicator" id="capsule"></div>
-
     <div class="menu" tabindex="0" id="menu">
       <div class="menu-header">
-        <div class="title">Shiesty Menu</div>
+        <img src="https://i.ibb.co/4Rz2SXMm/LOGO.png" alt="Header">
       </div>
-
       <div class="menu-pill-container"><div class="menu-pill" id="section-title">HOME</div></div>
 
       <!-- HOME MENU -->
@@ -321,56 +304,48 @@
       <!-- SELF SUBMENU -->
       <ul class="submenu" id="self-submenu">
         <li class="section">Movement</li>
-        <li data-feature="noclip"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-feature="godmode"><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-feature="infinite stamina"><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+        <li><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Modifications</li>
-        <li data-feature="super jump"><span class="left-content">Super Jump</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-feature="fast run"><span class="left-content">Fast Run</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+        <li><span class="left-content">Super Jump</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Fast Run</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Actions</li>
-        <li data-feature="revive"><div class="revive-btn">Revive</div></li>
+        <li><div class="revive-btn">Revive</div></li>
       </ul>
 
       <!-- ONLINE MENU -->
       <ul class="submenu" id="online-submenu">
-        <li data-feature="list"><div class="left-content">List</div><span class="arrow">»</span></li>
-        <li data-feature="features"><div class="left-content">Features</div><span class="arrow">»</span></li>
+        <li><div class="left-content">List</div><span class="arrow">»</span></li>
+        <li><div class="left-content">Features</div><span class="arrow">»</span></li>
       </ul>
 
       <!-- ONLINE > LIST -->
       <ul class="submenu" id="online-list-submenu">
-        <li data-feature="select everyone"><span class="left-content">Select Everyone</span><div class="switch" data-role="select-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-feature="unselect everyone"><span class="left-content">Unselect Everyone</span><div class="switch" data-role="unselect-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+        <li><span class="left-content">Select Everyone</span><div class="switch" data-role="select-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Unselect Everyone</span><div class="switch" data-role="unselect-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Players</li>
-        <li data-feature="player1"><span class="left-content">Player1</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-feature="player2"><span class="left-content">Player2</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Player1</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Player2</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
       </ul>
 
       <!-- ONLINE > FEATURES -->
       <ul class="submenu" id="online-features-submenu">
-        <li data-feature="teleport to player"><div class="feature-btn">Teleport to Player</div></li>
-        <li data-feature="spectate"><span class="left-content">Spectate</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+        <li><div class="feature-btn">Teleport to Player</div></li>
+        <li><span class="left-content">Spectate</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Appearance</li>
-        <li data-feature="copy clothing"><div class="feature-btn">Copy Clothing</div></li>
-        <li data-feature="copy appearance"><div class="feature-btn">Copy Appearance</div></li>
+        <li><div class="feature-btn">Copy Clothing</div></li>
+        <li><div class="feature-btn">Copy Appearance</div></li>
       </ul>
 
       <!-- SETTINGS SUBMENU -->
       <ul class="submenu" id="settings-submenu">
         <li class="section">Colors</li>
-        <li data-feature="blue"><div class="feature-btn color-btn" data-color="#00a2ff">Blue</div></li>
-        <li data-feature="red"><div class="feature-btn color-btn" data-color="#ff0044">Red</div></li>
-        <li data-feature="green"><div class="feature-btn color-btn" data-color="#16c24a">Green</div></li>
-        <li data-feature="orange"><div class="feature-btn color-btn" data-color="#ff7a00">Orange</div></li>
-        <li data-feature="restore color"><div class="feature-btn color-btn" data-color="__restore">Restore Color</div></li>
-
-        <li class="section">Headers</li>
-        <li data-feature="use banner"><div class="feature-btn header-btn" data-mode="banner">Use Banner</div></li>
-        <li data-feature="use solid"><div class="feature-btn header-btn" data-mode="solid">Use Solid</div></li>
+        <li><div class="feature-btn" data-color="blue">Blue</div></li>
+        <li><div class="feature-btn" data-color="red">Red</div></li>
+        <li><div class="feature-btn" data-color="green">Green</div></li>
+        <li><div class="feature-btn" data-color="orange">Orange</div></li>
+        <li><div class="feature-btn" data-color="restore">Restore</div></li>
       </ul>
 
       <div class="menu-footer">
@@ -380,349 +355,322 @@
     </div>
   </div>
 
-  <!-- Notifications -->
-  <div class="notification-container" id="notifications"></div>
-
-  <!-- Finder (bottom-center) -->
+  <!-- Finder Box (shows when user presses Enter on "Find Feature") -->
   <div class="finder" id="finder">
     <div class="panel">
       <div class="label">find feature</div>
       <div class="line"></div>
-      <input id="finderInput" type="text" placeholder="" />
+      <input id="finder-input" placeholder="type here..." />
     </div>
   </div>
 
+  <!-- Notifications -->
+  <div class="notification-container" id="notifications"></div>
+
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    lucide.createIcons();
+    window.onload = () => {
+      lucide.createIcons();
 
-    const menuEl = document.getElementById('menu');
-    const track = document.getElementById('track');
-    const capsule = document.getElementById('capsule');
-    const footerCount = document.getElementById('footer-count');
-    const sectionTitle = document.getElementById('section-title');
+      const menuEl = document.getElementById('menu');
+      const track = document.getElementById('track');
+      const capsule = document.getElementById('capsule');
+      const footerCount = document.getElementById('footer-count');
+      const sectionTitle = document.getElementById('section-title');
+      const mainMenu = document.getElementById('main-menu');
+      const selfSubmenu = document.getElementById('self-submenu');
+      const onlineSubmenu = document.getElementById('online-submenu');
+      const onlineListSubmenu = document.getElementById('online-list-submenu');
+      const onlineFeaturesSubmenu = document.getElementById('online-features-submenu');
+      const settingsSubmenu = document.getElementById('settings-submenu');
+      const notifications = document.getElementById('notifications');
 
-    const mainMenu = document.getElementById('main-menu');
-    const selfSubmenu = document.getElementById('self-submenu');
-    const onlineSubmenu = document.getElementById('online-submenu');
-    const onlineListSubmenu = document.getElementById('online-list-submenu');
-    const onlineFeaturesSubmenu = document.getElementById('online-features-submenu');
-    const settingsSubmenu = document.getElementById('settings-submenu');
+      const finder = document.getElementById('finder');
+      const finderInput = document.getElementById('finder-input');
 
-    const notifications = document.getElementById('notifications');
+      const ALL_MENUS = [mainMenu,selfSubmenu,onlineSubmenu,onlineListSubmenu,onlineFeaturesSubmenu,settingsSubmenu];
 
-    const finder = document.getElementById('finder');
-    const finderInput = document.getElementById('finderInput');
+      let currentMenu = mainMenu;
+      let items = [...currentMenu.querySelectorAll('li')];
+      let index = 0;
 
-    let currentMenu = mainMenu;
-    let items = [...currentMenu.querySelectorAll('li')];
-    let index = 0;
+      // remember cursor per menu
+      const lastIndexById = {};
+      // manual stack for back navigation (fixes "stuck" bug)
+      const menuStack = [];
 
-    const menuStack = []; // for remembering where we were
-    const lastIndexById = {}; // persist index per menu
-
-    const ALL_MENUS = [mainMenu, selfSubmenu, onlineSubmenu, onlineListSubmenu, onlineFeaturesSubmenu, settingsSubmenu];
-
-    function updateTrack(){
-      track.style.top = currentMenu.offsetTop + "px";
-      track.style.height = currentMenu.offsetHeight + "px";
-    }
-
-    function updateCapsule(){
-      const li = items[index];
-      if(!li) return;
-      const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
-      capsule.style.top = top + 'px';
-    }
-
-    function updateSelection(){
-      items.forEach(li => li.classList.remove('selected'));
-      if(items[index]) items[index].classList.add('selected');
-      footerCount.textContent = `${index + 1}/${items.length}`;
-      updateTrack();
-      updateCapsule();
-    }
-
-    function setMenuVisible(menu, visible){
-      menu.style.display = visible ? 'block' : 'none';
-    }
-
-    function openSubmenu(menu, title){
-      // remember current index
-      if(currentMenu) lastIndexById[currentMenu.id] = index;
-      // push stack if navigating deeper
-      if(currentMenu && currentMenu !== menu) menuStack.push(currentMenu);
-
-      // hide all
-      ALL_MENUS.forEach(m => setMenuVisible(m,false));
-      // show target
-      setMenuVisible(menu,true);
-
-      currentMenu = menu;
-      // filter out divider sections
-      items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
-      // restore last index for this menu
-      index = Math.min(lastIndexById[menu.id] ?? 0, Math.max(items.length-1,0));
-
-      if(title) sectionTitle.textContent = title;
-      updateSelection();
-    }
-
-    function goBack(){
-      if(menuStack.length === 0) return;
-      const prev = menuStack.pop();
-      // remember current index before leaving
-      lastIndexById[currentMenu.id] = index;
-      openSubmenu(prev, prev === mainMenu ? "HOME" : sectionTitle.textContent);
-    }
-
-    function toggleSwitch(li){
-      const sw = li.querySelector('.switch');
-      if(!sw) return;
-      const on = sw.getAttribute('data-state') === 'on';
-      sw.setAttribute('data-state', on ? 'off' : 'on');
-
-      // special cases
-      if(sw.dataset.role === "select-all"){
-        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
-        showNotification("All players selected","ok");
-      }
-      if(sw.dataset.role === "unselect-all"){
-        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
-        showNotification("All players unselected","ok");
-      }
-    }
-
-    function pressButton(li){
-      const btn = li.querySelector('.revive-btn, .feature-btn');
-      if(btn){
-        showNotification("Executed","ok");
-      }
-    }
-
-    function handleEnter(){
-      const li = items[index];
-      if(!li) return;
-
-      if(currentMenu === mainMenu){
-        const txt = li.innerText.trim().toLowerCase();
-
-        if(txt.startsWith('self')) openSubmenu(selfSubmenu,"SELF");
-        else if(txt.startsWith('online')) openSubmenu(onlineSubmenu,"ONLINE");
-        else if(txt.startsWith('settings')) openSubmenu(settingsSubmenu,"SETTINGS");
-        else if(txt.startsWith('find feature')){
-          openFinder();
+      /* THEME (settings) */
+      function setTheme(color){
+        const root = document.documentElement.style;
+        const map = {
+          blue:  ['#0078ff66','1px solid #2aa0ff'],
+          red:   ['#ff004466','1px solid #ff4b6a'],
+          green: ['#12b88666','1px solid #2bd97f'],
+          orange:['#ff7f0066','1px solid #ffae42']
+        };
+        const d = map[color];
+        if(!d){ // restore
+          root.removeProperty('--sel-bg');
+          root.removeProperty('--sel-border');
+          showNotification('Colors restored');
+          return;
         }
-        // placeholders for other sections (kept visible on HOME)
-        return;
+        root.setProperty('--sel-bg', d[0]);
+        root.setProperty('--sel-border', d[1]);
+        showNotification(`Color set: ${color}`);
       }
 
-      if(currentMenu === onlineSubmenu){
-        const t = li.innerText.trim().toLowerCase();
-        if(t.startsWith('list')) openSubmenu(onlineListSubmenu,"ONLINE > LIST");
-        else if(t.startsWith('features')) openSubmenu(onlineFeaturesSubmenu,"ONLINE > FEATURES");
-        return;
+      function showNotification(msg, isError=false){
+        const note = document.createElement('div');
+        note.className = 'notification' + (isError ? ' error' : '');
+        note.textContent = msg;
+        notifications.appendChild(note);
+        requestAnimationFrame(()=> note.classList.add('show'));
+        setTimeout(()=>{
+          note.classList.remove('show');
+          setTimeout(()=> note.remove(), 300);
+        }, 2000);
       }
 
-      // actions inside submenus
-      if(li.querySelector('.switch')) toggleSwitch(li);
-      else if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')) pressButton(li);
-    }
+      function setMenuVisible(menu, vis){ menu.style.display = vis ? 'block' : 'none'; }
 
-    // --- Finder (Enter to open on "Find Feature"; Enter to go; Esc to close)
-    function openFinder(){
-      finder.style.display = 'block';
-      finderInput.value = '';
-      finderInput.focus();
-    }
-    function closeFinder(){
-      finder.style.display = 'none';
-      menuEl.focus();
-    }
+      function updateTrack(){
+        track.style.top = currentMenu.offsetTop + "px";
+        track.style.height = currentMenu.offsetHeight + "px";
+      }
+      function updateCapsule(){
+        const li = items[index];
+        const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
+        capsule.style.top = top + 'px';
+      }
+      function updateSelection(){
+        items.forEach(li => li.classList.remove('selected'));
+        if(items[index]) items[index].classList.add('selected');
+        footerCount.textContent = `${index + 1}/${items.length}`;
+        updateTrack();
+        updateCapsule();
+      }
 
-    function normalize(s){ return s.toLowerCase().trim(); }
+      function openOnly(menu){
+        ALL_MENUS.forEach(m => setMenuVisible(m,false));
+        setMenuVisible(menu,true);
+      }
 
-    function featureIndex(){
-      // Build quick index of feature -> {menu, li, title}
-      const map = [];
-      function addFrom(menu, titlePrefix){
-        const lis = [...menu.querySelectorAll('li')];
-        lis.forEach((li) => {
-          if(li.classList.contains('section')) return;
+      function openSubmenu(menu, title){
+        // remember current index before leaving
+        lastIndexById[currentMenu.id] = index;
+        menuStack.push(currentMenu);
 
-          let label = "";
-          const lc = li.querySelector('.left-content');
-          const btn = li.querySelector('.revive-btn, .feature-btn');
-          if(lc) label = lc.innerText.trim();
-          else if(btn) label = btn.innerText.trim();
-          else label = li.innerText.trim();
+        openOnly(menu);
+        currentMenu = menu;
+        items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+        index = lastIndexById[menu.id] || 0;
+        sectionTitle.textContent = title;
+        updateSelection();
+      }
 
-          const featAttr = li.getAttribute('data-feature');
-          const key = normalize(featAttr || label);
+      function goBack(){
+        if(menuStack.length === 0) return;
+        // remember where we were in this menu
+        lastIndexById[currentMenu.id] = index;
 
-          // find nearest section label above for crumb
-          let sect = "";
-          let prev = li.previousElementSibling;
-          while(prev){
-            if(prev.classList.contains('section')){ sect = prev.textContent.trim(); break; }
-            prev = prev.previousElementSibling;
+        const prev = menuStack.pop();
+        openOnly(prev);
+        currentMenu = prev;
+        items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+        index = lastIndexById[prev.id] || 0;
+
+        // set title based on which menu we returned to
+        let title = 'HOME';
+        if(prev === selfSubmenu) title = 'SELF';
+        else if(prev === onlineSubmenu) title = 'ONLINE';
+        else if(prev === onlineListSubmenu) title = 'ONLINE > LIST';
+        else if(prev === onlineFeaturesSubmenu) title = 'ONLINE > FEATURES';
+        else if(prev === settingsSubmenu) title = 'SETTINGS';
+
+        sectionTitle.textContent = title;
+        updateSelection();
+      }
+
+      function toggleSwitch(li){
+        const sw = li.querySelector('.switch');
+        if(!sw) return;
+        const on = sw.getAttribute('data-state') === 'on';
+        sw.setAttribute('data-state', on ? 'off' : 'on');
+
+        // Handle special cases
+        if(sw.dataset.role === "select-all"){
+          document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
+          showNotification("All players selected");
+        }
+        if(sw.dataset.role === "unselect-all"){
+          document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
+          showNotification("All players unselected");
+        }
+      }
+
+      function pressButton(li){
+        const btn = li.querySelector('.revive-btn, .feature-btn');
+        if(btn){
+          showNotification("Executed");
+        }
+      }
+
+      function handleEnter(){
+        const li = items[index];
+        const label = li?.innerText?.trim().toLowerCase() || '';
+
+        if(currentMenu === mainMenu){
+          if(label.startsWith('self')) openSubmenu(selfSubmenu,"SELF");
+          else if(label.startsWith('online')) openSubmenu(onlineSubmenu,"ONLINE");
+          else if(label.startsWith('settings')) openSubmenu(settingsSubmenu,"SETTINGS");
+          else if(label.startsWith('find feature')){
+            openFinder();
           }
-
-          let title = titlePrefix;
-          if(sect) title = `${titlePrefix} > ${sect.toUpperCase()}`;
-
-          map.push({ key, menu, li, title });
-        });
-      }
-
-      addFrom(selfSubmenu,"SELF");
-      addFrom(onlineSubmenu,"ONLINE"); // List / Features entries
-      addFrom(onlineListSubmenu,"ONLINE"); // players/selectors
-      addFrom(onlineFeaturesSubmenu,"ONLINE"); // features + appearance
-      addFrom(settingsSubmenu,"SETTINGS");
-
-      return map;
-    }
-
-    function gotoFeatureByName(name){
-      const q = normalize(name);
-      if(!q) return false;
-
-      // index & simple matching
-      const idx = featureIndex();
-
-      // exact then contains
-      let found = idx.find(e => e.key === q) || idx.find(e => e.key.includes(q) || q.includes(e.key));
-
-      if(!found){
-        showNotification("feature not found","err");
-        return false;
-      }
-
-      // open the correct parent submenu
-      const parentId = found.menu.id;
-      if(parentId === 'self-submenu') openSubmenu(selfSubmenu, found.title);
-      else if(parentId === 'online-submenu') openSubmenu(onlineSubmenu, found.title);
-      else if(parentId === 'online-list-submenu') openSubmenu(onlineListSubmenu, "ONLINE > LIST");
-      else if(parentId === 'online-features-submenu') openSubmenu(onlineFeaturesSubmenu, "ONLINE > FEATURES");
-      else if(parentId === 'settings-submenu') openSubmenu(settingsSubmenu, "SETTINGS");
-      else openSubmenu(mainMenu, "HOME");
-
-      // select the exact LI inside that submenu
-      items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
-      index = Math.max(0, items.indexOf(found.li));
-      updateSelection();
-
-      // set more precise crumb if we have it
-      if(found.title) sectionTitle.textContent = found.title;
-
-      return true;
-    }
-
-    // Notifications
-    function showNotification(msg, type="ok"){
-      const note = document.createElement('div');
-      note.className = `notification ${type}`;
-      note.textContent = msg;
-      notifications.appendChild(note);
-      requestAnimationFrame(()=> note.classList.add('show'));
-      setTimeout(()=>{
-        note.classList.remove('show');
-        setTimeout(()=> note.remove(), 260);
-      }, 2200);
-    }
-
-    // Theming (Settings > Colors)
-    const defaults = {
-      accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
-      selBg:  getComputedStyle(document.documentElement).getPropertyValue('--sel-bg').trim(),
-      selBorder: getComputedStyle(document.documentElement).getPropertyValue('--sel-border').trim(),
-    };
-    function hexToRgba(hex, a){
-      const h = hex.replace('#','');
-      const bigint = parseInt(h,16);
-      const r = (bigint >> 16) & 255;
-      const g = (bigint >> 8) & 255;
-      const b = bigint & 255;
-      return `rgba(${r},${g},${b},${a})`;
-    }
-    function applyThemeColor(hex){
-      document.documentElement.style.setProperty('--accent', hex);
-      document.documentElement.style.setProperty('--sel-bg', hexToRgba(hex, 0.54));
-      document.documentElement.style.setProperty('--sel-border', `1px solid ${hex}`);
-    }
-    function restoreTheme(){
-      document.documentElement.style.setProperty('--accent', defaults.accent);
-      document.documentElement.style.setProperty('--sel-bg', defaults.selBg);
-      document.documentElement.style.setProperty('--sel-border', defaults.selBorder);
-    }
-
-    // Header style buttons
-    function setHeaderMode(mode){
-      const header = document.querySelector('.menu-header');
-      if(mode === 'solid'){
-        header.style.background = '#111';
-      } else {
-        header.style.background = 'linear-gradient(90deg,#7a00ff 0%, #b100ff 50%, #e100ff 100%)';
-      }
-    }
-
-    // Key handling
-    document.addEventListener('keydown', e => {
-      // Finder open?
-      if(finder.style.display === 'block'){
-        if(e.key === 'Escape'){ closeFinder(); }
-        else if(e.key === 'Enter'){
-          const ok = gotoFeatureByName(finderInput.value);
-          closeFinder(); // close on enter regardless
-          if(ok) menuEl.focus();
+        } else if(currentMenu === onlineSubmenu){
+          if(label.startsWith('list')) openSubmenu(onlineListSubmenu,"ONLINE > LIST");
+          else if(label.startsWith('features')) openSubmenu(onlineFeaturesSubmenu,"ONLINE > FEATURES");
+        } else if(currentMenu === settingsSubmenu){
+          // color buttons
+          if(li.querySelector('.feature-btn')){
+            const c = li.querySelector('.feature-btn').dataset.color;
+            if(c === 'restore') setTheme('restore');
+            else setTheme(c);
+          }
+        } else {
+          if(li.querySelector('.switch')) toggleSwitch(li);
+          else if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')) pressButton(li);
         }
-        return; // don't let finder keystrokes navigate menu
       }
 
-      // Normal menu navigation
-      if(e.key === 'ArrowDown'){
-        index = (index + 1) % items.length;
+      /* ===== Finder ===== */
+      function openFinder(){
+        finder.style.display = 'block';
+        finderInput.value = '';
+        finderInput.focus();
+      }
+      function closeFinder(){
+        finder.style.display = 'none';
+        menuEl.focus();
+      }
+
+      function getMenuTitleFor(menu){
+        if(menu === mainMenu) return 'HOME';
+        if(menu === selfSubmenu) return 'SELF';
+        if(menu === onlineSubmenu) return 'ONLINE';
+        if(menu === onlineListSubmenu) return 'ONLINE > LIST';
+        if(menu === onlineFeaturesSubmenu) return 'ONLINE > FEATURES';
+        if(menu === settingsSubmenu) return 'SETTINGS';
+        return '';
+      }
+
+      function goToLi(targetLi){
+        // find which UL holds this li
+        const parent = targetLi.closest('ul');
+        // build the path to open
+        if(parent === mainMenu){
+          openOnly(mainMenu);
+          currentMenu = mainMenu;
+          items = [...currentMenu.querySelectorAll('li')];
+          index = items.indexOf(targetLi);
+          sectionTitle.textContent = 'HOME';
+          updateSelection();
+          return;
+        }
+        if(parent === selfSubmenu){
+          // from main -> self
+          menuStack.length = 0; // reset stack to avoid weird states
+          openSubmenu(selfSubmenu,'SELF');
+        } else if(parent === onlineSubmenu){
+          menuStack.length = 0;
+          openSubmenu(onlineSubmenu,'ONLINE');
+        } else if(parent === onlineListSubmenu){
+          menuStack.length = 0;
+          openSubmenu(onlineSubmenu,'ONLINE'); // open parent first
+          openSubmenu(onlineListSubmenu,'ONLINE > LIST');
+        } else if(parent === onlineFeaturesSubmenu){
+          menuStack.length = 0;
+          openSubmenu(onlineSubmenu,'ONLINE'); // open parent first
+          openSubmenu(onlineFeaturesSubmenu,'ONLINE > FEATURES');
+        } else if(parent === settingsSubmenu){
+          menuStack.length = 0;
+          openSubmenu(settingsSubmenu,'SETTINGS');
+        }
+        // select the li
+        items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+        index = items.indexOf(targetLi);
+        if(index < 0) index = 0;
         updateSelection();
-      } else if(e.key === 'ArrowUp'){
-        index = (index - 1 + items.length) % items.length;
+
+        // path notice
+        showNotification(getMenuTitleFor(currentMenu), false);
+      }
+
+      function searchAndJump(q){
+        const query = q.trim().toLowerCase();
+        if(!query){
+          showNotification('feature not found', true);
+          return;
+        }
+        // scan all actionable lis (exclude .section)
+        const allLis = ALL_MENUS.flatMap(ul => [...ul.querySelectorAll('li')].filter(li => !li.classList.contains('section')));
+        const hit = allLis.find(li => li.innerText.trim().toLowerCase().includes(query));
+        if(!hit){
+          showNotification('feature not found', true);
+          return;
+        }
+        goToLi(hit);
+        closeFinder();
+        // also show exact LOCATION string like SECTION > SECTION
+        const parent = hit.closest('ul');
+        showNotification(getMenuTitleFor(parent));
+      }
+
+      /* ====== Keyboard ====== */
+      document.addEventListener('keydown', e => {
+        // Finder open state has priority
+        if(finder.style.display === 'block'){
+          if(e.key === 'Escape'){ // close finder with Esc
+            closeFinder();
+            e.preventDefault();
+          } else if(e.key === 'Enter'){
+            searchAndJump(finderInput.value);
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if(e.key === 'ArrowDown'){
+          index = (index + 1) % items.length;
+          updateSelection();
+          e.preventDefault();
+        } else if(e.key === 'ArrowUp'){
+          index = (index - 1 + items.length) % items.length;
+          updateSelection();
+          e.preventDefault();
+        } else if(e.key === 'Enter'){
+          handleEnter(); // Enter selects or opens finder (when "Find Feature" is selected)
+          e.preventDefault();
+        } else if(e.key === 'Backspace'){
+          // back out of submenus (fixed so Online sub-submenus return to Online)
+          goBack();
+          e.preventDefault();
+        }
+      });
+
+      function init(){
+        // show only main on load
+        openOnly(mainMenu);
+        currentMenu = mainMenu;
+        items = [...currentMenu.querySelectorAll('li')];
+        index = 0;
+        sectionTitle.textContent = 'HOME';
+        menuEl.focus();
         updateSelection();
-      } else if(e.key === 'Enter'){
-        handleEnter(); // Enter to open sub/activate
-      } else if(e.key === 'Backspace'){
-        goBack(); // keep backspace to go back in menus
       }
-    });
-
-    // click handlers for color & header buttons (keyboard selects + Enter calls pressButton)
-    document.addEventListener('click', (e)=>{
-      const t = e.target.closest('.color-btn, .header-btn');
-      if(!t) return;
-
-      if(t.classList.contains('color-btn')){
-        const c = t.dataset.color;
-        if(c === '__restore') restoreTheme();
-        else applyThemeColor(c);
-        showNotification("Executed","ok");
-      } else if(t.classList.contains('header-btn')){
-        setHeaderMode(t.dataset.mode);
-        showNotification("Executed","ok");
-      }
-    });
-
-    function init(){
-      // show only HOME by default
-      ALL_MENUS.forEach(m => setMenuVisible(m, m === mainMenu));
-      // selection
-      items = [...mainMenu.querySelectorAll('li')];
-      index = 0;
-      menuEl.focus();
-      updateSelection();
-      // initial header mode
-      setHeaderMode('banner');
-    }
-    window.addEventListener('resize', updateSelection);
-    requestAnimationFrame(init);
+      window.addEventListener('resize', updateSelection);
+      init();
+    };
   </script>
 </body>
 </html>
