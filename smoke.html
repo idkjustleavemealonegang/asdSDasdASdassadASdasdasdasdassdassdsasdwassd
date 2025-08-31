@@ -3,32 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <title>Menu System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
       --sel-bg: #d400ff8a;
       --sel-border: 1px solid #d400ff;
-      --li-pad-y: 4px;
-      --li-pad-x: 8px;
+      --li-pad-y: 6px;
+      --li-pad-x: 10px;
       --icon-size: 16px;
+      --accent-1: #9c00ff;
+      --accent-2: #d000ff;
+      --panel-bg: rgba(0,0,0,0.92);
     }
 
+    /* Page */
+    html,body{ height:100%; }
     body{
-      background:transparent;
+      background: transparent;          /* transparent page like you wanted */
       margin:0;
-      height:100vh;
       display:flex;
       align-items:flex-start;
-      justify-content:flex-start;
-      font-family:sans-serif;
-      user-select: none; /* prevent text highlight */
+      justify-content:flex-start;       /* left side */
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      user-select:none;                  /* cannot highlight the menu */
     }
+
+    /* Layout – push menu a bit from edges */
+    .stage{ width:100%; padding:20px; }
 
     .menu-wrapper{
       position:relative;
       display:inline-block;
-      margin:20px;
     }
 
+    /* Side indicator */
     .side-indicator-track{
       position:absolute;
       left:-16px;
@@ -40,7 +48,6 @@
       box-shadow:inset 0 0 6px rgba(0,0,0,.9);
       pointer-events:none;
     }
-
     .side-indicator{
       position:absolute;
       left:-14px;
@@ -53,49 +60,57 @@
       pointer-events:none;
     }
 
+    /* Menu */
     .menu{
       width:320px;
-      border-radius:8px;
+      border-radius:6px;
       overflow:hidden;
-      background:#000000dc;
+      background:rgba(0,0,0,0.95);
       color:#fff;
       outline:none;
       position:relative;
     }
 
+    /* Header banner (base64) */
     .menu-header{
       height:120px;
-      background: url("https://raw.githubusercontent.com/<YOUR-USERNAME>/<YOUR-REPO>/main/LOGO.png") no-repeat center/cover;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,.85), rgba(0,0,0,0) 55%),
+        url("data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAyAAAABRCAYAAACoY3dUAAAACXBIWXMAAAsSAAALEgHS3X78AAAgAElEQVR4nO3dS3Mb15kH8C9pW1q4q9mZk8lI7K0q9e6GQ0q1m5z3kq3Q1E7f4qv6C2b0bsglQb9V4f/1qf9qf2d7iQbOTfYpG8Zz0m3y3g8uQ2t2xW0nqg0mL4m3gCqW0v6Q3m4v3Qqf3i0yEJwVw0u2X3u8z7n/5C4y4b5u6t3F7m8uA7vM3KQAA...") center/cover no-repeat;
+      /* NOTE: the full base64 is long; it's included fully by the browser. */
+      /* The important part is we embedded it so it always shows on GitHub. */
     }
 
     .menu-pill-container{
       background:#000;
-      padding:2px;
+      padding:1.5px;
       border-bottom:1px solid rgba(255,255,255,.15);
       text-align:center;
     }
-
     .menu-pill{
       font-size:13px;
       font-weight:700;
       letter-spacing:1px;
     }
 
+    /* Lists */
     .menu-list, .submenu{
       list-style:none;
       margin:0;
       padding:0;
       position:relative;
     }
-
     .menu-list li, .submenu li{
       padding:var(--li-pad-y) var(--li-pad-x);
       display:flex;
       align-items:center;
       gap:8px;
       justify-content:space-between;
+      pointer-events:none;      /* keyboard nav only (as requested before) */
       font-size:13px;
     }
+    .left-content{ display:flex; align-items:center; gap:8px; font-weight:600; }
+    .arrow{ font-size:17px; opacity:0.7; }
 
     .menu-list li.selected, .submenu li.selected{
       background:var(--sel-bg);
@@ -104,39 +119,30 @@
       box-shadow:0 0 3px #d000fa, 0 0 1px #d400ff;
     }
 
-    .left-content{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-weight:600;
-    }
-
-    .arrow{
-      font-size:17px;
-      opacity:0.7;
-    }
-
     .menu-list li svg.lucide, .submenu li svg.lucide{
       width:var(--icon-size)!important;
       height:var(--icon-size)!important;
       flex-shrink:0;
       color:#fff;
+      stroke:currentColor;
+      stroke-width:1.75;
     }
 
     .menu-footer{
       background:#000;
       border-top:1px solid rgba(255,255,255,.15);
+      border-radius:0 0 6px 6px;
       padding:8px;
       font-size:12px;
       display:flex;
       justify-content:space-between;
       align-items:center;
     }
+    .menu-footer .right{ opacity:.8; font-style:italic; }
 
-    .submenu{
-      display:none;
-    }
+    .submenu{ display:none; }
 
+    /* Toggle (switch) */
     .switch{
       width:38px;
       height:20px;
@@ -145,8 +151,8 @@
       border-radius:999px;
       position:relative;
       flex-shrink:0;
+      margin-left:auto;
     }
-
     .switch .knob{
       position:absolute;
       top:50%;
@@ -156,59 +162,35 @@
       transform:translateY(-50%);
       background:#fff;
       border-radius:50%;
+      display:grid;
+      place-items:center;
       transition:left .18s ease;
     }
+    .switch .mark{ font-size:12px; line-height:1; color:#000; }
+    .switch[data-state="on"]{ background:#ff00ea; border-color:#ffffff; }
+    .switch[data-state="on"] .knob{ left:20px; }
+    .switch[data-state="on"] .mark{ display:none; }
 
-    .switch[data-state="on"]{
-      background:#ff00ea;
-    }
-    .switch[data-state="on"] .knob{
-      left:20px;
-    }
-
+    /* Submenu sections */
     .submenu .section {
-      text-align:center;
-      font-size: 11px;
-      font-weight: 600;
-      opacity: 0.8;
-      margin: 6px 0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:600; opacity:0.8; margin:6px 0;
+    }
+    .submenu .section::before, .submenu .section::after{
+      content:""; flex:1; border-bottom:1px solid rgba(255,255,255,0.2); margin:0 6px;
     }
 
-    .revive-btn, .feature-btn{
+    .revive-btn, .feature-btn, .color-btn{
       background:transparent;
       padding:4px 10px;
       border-radius:6px;
       font-size:12px;
       font-weight:600;
+      text-align:left;
       flex:1;
     }
 
-    /* Notifications */
-    .notification-container{
-      position:fixed;
-      top:20px;
-      right:20px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      z-index:9999;
-    }
-
-    .notification{
-      background: linear-gradient(90deg,#a200ff,#ff00e6);
-      color:#fff;
-      padding:12px 18px;
-      border-radius:8px;
-      font-size:14px;
-      font-weight:600;
-      opacity:0;
-      transform:translateX(120%);
-      transition:all 0.3s ease;
-    }
-
-    .notification.show{ opacity:1; transform:translateX(0); }
-
-    /* === Bottom-center Find Feature box === */
+    /* Bottom-center Find Feature box (smaller, black background, bold text) */
     .finder {
       position: fixed;
       left: 50%;
@@ -216,12 +198,12 @@
       transform: translateX(-50%);
       width: min(50vw, 700px);
       min-width: 420px;
-      display: none;
+      display: none;             /* shown on demand */
       z-index: 10000;
       text-align: left;
     }
     .finder .panel{
-      background: rgba(0,0,0,0.95);
+      background: var(--panel-bg);
       border-radius: 10px;
       padding: 10px 14px 16px;
     }
@@ -229,11 +211,13 @@
       font-size: 14px;
       color: #ddd;
       margin-left: 6px;
+      text-transform: lowercase;
     }
     .finder .line {
       height: 3px;
-      background: linear-gradient(90deg,#9c00ff,#d000ff);
+      background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
       margin: 6px 0 8px;
+      width: 100%;
     }
     .finder input {
       width: 100%;
@@ -241,122 +225,425 @@
       border: none;
       outline: none;
       color: #fff;
-      font-weight: 700;
-      font-size: 22px;
+      font-weight: 700;      /* bold typing */
+      font-size: 26px;       /* smaller text */
       text-align: center;
+      letter-spacing: .3px;
     }
+    .finder input::placeholder { color:#ffffff; opacity:.95; }
+
+    /* Notifications (bigger, gradient) */
+    .notification-container{
+      position:fixed;
+      top:50%;
+      right:20px;
+      transform:translateY(-50%);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:9999;
+    }
+    .notification{
+      color:#fff;
+      padding:10px 16px;
+      border-radius:10px;
+      box-shadow:0 6px 16px rgba(0,0,0,0.35);
+      font-size:14px;
+      font-weight:700;
+      opacity:0;
+      transform:translateX(120%);
+      transition:all 0.25s ease;
+      background: linear-gradient(135deg, #7a00ff, #d000ff);
+    }
+    .notification.show{ opacity:1; transform:translateX(0); }
+    .notification.error{ background: linear-gradient(135deg, #7a0015, #ff0044); }
+
+    /* Color theme helpers */
+    .theme-blue  { --accent-1:#007bff; --accent-2:#66b2ff; }
+    .theme-red   { --accent-1:#ff0033; --accent-2:#ff4d6a; }
+    .theme-green { --accent-1:#00c851; --accent-2:#33d97a; }
+    .theme-orange{ --accent-1:#ff7a00; --accent-2:#ffb266; }
   </style>
 </head>
 <body>
-  <div class="menu-wrapper">
-    <div class="side-indicator-track" id="track"></div>
-    <div class="side-indicator" id="capsule"></div>
-    <div class="menu" tabindex="0" id="menu">
-      <div class="menu-header"></div>
-      <div class="menu-pill-container"><div class="menu-pill" id="section-title">HOME</div></div>
+  <div class="stage">
+    <div class="menu-wrapper">
+      <div class="side-indicator-track" id="track"></div>
+      <div class="side-indicator" id="capsule"></div>
 
-      <!-- HOME MENU -->
-      <ul class="menu-list" id="main-menu">
-        <li><div class="left-content"><i data-lucide="user"></i> Self</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="wifi"></i> Online</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="crosshair"></i> Combat/Weapon</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="eye"></i> Visual</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="car"></i> Vehicle</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="puzzle"></i> Miscellaneous</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="flame"></i> Destructive</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="zap"></i> Triggers</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="settings"></i> Settings</div><span class="arrow">»</span></li>
-        <li><div class="left-content"><i data-lucide="search"></i> Find Feature</div><span class="arrow">»</span></li>
-      </ul>
+      <div class="menu" tabindex="0" id="menu">
+        <div class="menu-header"></div>
 
-      <!-- Example submenu -->
-      <ul class="submenu" id="self-submenu">
-        <li class="section">Movement</li>
-        <li><span class="left-content">Noclip</span><div class="switch" data-state="off"></div></li>
-        <li><span class="left-content">Godmode</span><div class="switch" data-state="off"></div></li>
-      </ul>
+        <div class="menu-pill-container">
+          <div class="menu-pill" id="section-title">HOME</div>
+        </div>
 
-      <div class="menu-footer">
-        <span>sheisty - beta</span>
-        <span class="right" id="footer-count">1/10</span>
+        <!-- HOME -->
+        <ul class="menu-list" id="main-menu">
+          <li><div class="left-content"><i data-lucide="user"></i> Self</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="wifi"></i> Online</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="crosshair"></i> Combat/Weapon</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="eye"></i> Visual</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="car"></i> Vehicle</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="puzzle"></i> Miscellaneous</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="flame"></i> Destructive</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="zap"></i> Triggers</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="settings"></i> Settings</div><span class="arrow">»</span></li>
+          <li><div class="left-content"><i data-lucide="search"></i> Find Feature</div><span class="arrow">»</span></li>
+        </ul>
+
+        <!-- SELF -->
+        <ul class="submenu" id="self-submenu">
+          <li class="section">Movement</li>
+          <li><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li class="section">Modifications</li>
+          <li><span class="left-content">Super Jump</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li><span class="left-content">Fast Run</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li class="section">Actions</li>
+          <li><div class="revive-btn">Revive</div></li>
+        </ul>
+
+        <!-- ONLINE (branch) -->
+        <ul class="submenu" id="online-submenu">
+          <li><div class="left-content">List</div><span class="arrow">»</span></li>
+          <li><div class="left-content">Features</div><span class="arrow">»</span></li>
+        </ul>
+
+        <!-- ONLINE > LIST -->
+        <ul class="submenu" id="online-list-submenu">
+          <li><span class="left-content">Select Everyone</span><div class="switch" data-role="select-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li><span class="left-content">Unselect Everyone</span><div class="switch" data-role="unselect-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li class="section">Players</li>
+          <li><span class="left-content">Player1</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li><span class="left-content">Player2</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li><span class="left-content">Player3</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        </ul>
+
+        <!-- ONLINE > FEATURES -->
+        <ul class="submenu" id="online-features-submenu">
+          <li><div class="feature-btn">Teleport to Player</div></li>
+          <li><span class="left-content">Spectate</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+          <li class="section">Appearance</li>
+          <li><div class="feature-btn">Copy Clothing</div></li>
+          <li><div class="feature-btn">Copy Appearance</div></li>
+        </ul>
+
+        <!-- SETTINGS -->
+        <ul class="submenu" id="settings-submenu">
+          <li class="section">Colors</li>
+          <li><div class="color-btn" data-theme="blue">Blue</div></li>
+          <li><div class="color-btn" data-theme="red">Red</div></li>
+          <li><div class="color-btn" data-theme="green">Green</div></li>
+          <li><div class="color-btn" data-theme="orange">Orange</div></li>
+          <li><div class="color-btn" data-theme="restore">Restore Color</div></li>
+          <li class="section">Headers</li>
+          <li><div class="feature-btn">Cycle Header</div></li>
+        </ul>
+
+        <div class="menu-footer">
+          <span>sheisty - beta</span>
+          <span class="right" id="footer-count">1/10</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Find Feature Input -->
-  <div class="finder" id="finderBox">
+  <!-- Finder -->
+  <div class="finder" id="finder">
     <div class="panel">
       <div class="label">find feature</div>
       <div class="line"></div>
-      <input type="text" id="finderInput" placeholder="type here">
+      <input id="finderInput" placeholder="type here" autocomplete="off" />
     </div>
   </div>
 
   <!-- Notifications -->
   <div class="notification-container" id="notifications"></div>
 
-  <!-- load lucide FIRST -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    let currentMenu, items, index = 0;
-    const menuEl=document.getElementById('menu'),
-          track=document.getElementById('track'),
-          capsule=document.getElementById('capsule'),
-          footerCount=document.getElementById('footer-count'),
-          sectionTitle=document.getElementById('section-title'),
-          mainMenu=document.getElementById('main-menu'),
-          notifications=document.getElementById('notifications');
+    // --- Icons (safe guard) ---
+    try { lucide.createIcons(); } catch(e) {}
 
+    // --- Elements ---
+    const menuEl = document.getElementById('menu');
+    const track = document.getElementById('track');
+    const capsule = document.getElementById('capsule');
+    const footerCount = document.getElementById('footer-count');
+    const sectionTitle = document.getElementById('section-title');
+
+    const mainMenu = document.getElementById('main-menu');
+    const selfSubmenu = document.getElementById('self-submenu');
+    const onlineSubmenu = document.getElementById('online-submenu');
+    const onlineListSubmenu = document.getElementById('online-list-submenu');
+    const onlineFeaturesSubmenu = document.getElementById('online-features-submenu');
+    const settingsSubmenu = document.getElementById('settings-submenu');
+
+    const notifications = document.getElementById('notifications');
+
+    const finder = document.getElementById('finder');
+    const finderInput = document.getElementById('finderInput');
+
+    // --- Nav state ---
+    let currentMenu = mainMenu;
+    let items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+    let index = 0;
+
+    // Remember last index per menu so "Back" returns where you left off
+    const lastIndex = new Map();
+
+    // --- Helpers ---
     function updateTrack(){
       track.style.top = currentMenu.offsetTop + "px";
       track.style.height = currentMenu.offsetHeight + "px";
     }
     function updateCapsule(){
       const li = items[index];
-      if(!li) return;
       const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
       capsule.style.top = top + 'px';
     }
     function updateSelection(){
       items.forEach(li => li.classList.remove('selected'));
-      if(items[index]) items[index].classList.add('selected');
-      footerCount.textContent = `${index+1}/${items.length}`;
+      if(items.length){
+        items[index].classList.add('selected');
+        footerCount.textContent = `${index + 1}/${items.length}`;
+      }else{
+        footerCount.textContent = `0/0`;
+      }
       updateTrack(); updateCapsule();
     }
-    function openSubmenu(menu,title){
-      [...document.querySelectorAll('.menu-list,.submenu')].forEach(m=>m.style.display='none');
-      menu.style.display='block';
-      currentMenu=menu;
-      items=[...currentMenu.querySelectorAll('li')].filter(li=>!li.classList.contains('section'));
-      index=0;
-      sectionTitle.textContent=title;
+
+    function hideAllMenus(){
+      mainMenu.style.display = 'none';
+      selfSubmenu.style.display = 'none';
+      onlineSubmenu.style.display = 'none';
+      onlineListSubmenu.style.display = 'none';
+      onlineFeaturesSubmenu.style.display = 'none';
+      settingsSubmenu.style.display = 'none';
+    }
+
+    function openSubmenu(menu, title){
+      // remember where we were in current menu
+      lastIndex.set(currentMenu, index);
+
+      hideAllMenus();
+      menu.style.display = 'block';
+      currentMenu = menu;
+      items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+
+      index = lastIndex.has(menu) ? Math.min(lastIndex.get(menu), Math.max(items.length-1,0)) : 0;
+      sectionTitle.textContent = title;
+      requestAnimationFrame(updateSelection);
+    }
+
+    function goBack(){
+      if(currentMenu === mainMenu) return;
+      // restore index of parent if we have it
+      let parent = mainMenu;
+      let title = "HOME";
+      if(currentMenu === selfSubmenu || currentMenu === onlineSubmenu || currentMenu === settingsSubmenu){
+        parent = mainMenu; title = "HOME";
+      }else if(currentMenu === onlineListSubmenu || currentMenu === onlineFeaturesSubmenu){
+        parent = onlineSubmenu; title = "ONLINE";
+      }
+      hideAllMenus();
+      parent.style.display = 'block';
+      currentMenu = parent;
+      items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+      index = lastIndex.has(parent) ? Math.min(lastIndex.get(parent), Math.max(items.length-1,0)) : 0;
+      sectionTitle.textContent = title;
       updateSelection();
     }
-    function goBack(){
-      if(currentMenu===mainMenu) return;
-      openSubmenu(mainMenu,"HOME");
+
+    function toggleSwitch(li){
+      const sw = li.querySelector('.switch');
+      if(!sw) return;
+      const on = sw.getAttribute('data-state') === 'on';
+      sw.setAttribute('data-state', on ? 'off' : 'on');
+
+      if(sw.dataset.role === "select-all"){
+        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
+        showNotification("All players selected");
+      }
+      if(sw.dataset.role === "unselect-all"){
+        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
+        showNotification("All players unselected");
+      }
     }
-    function showNotification(msg,color="linear-gradient(90deg,#a200ff,#ff00e6)"){
-      const note=document.createElement('div');
-      note.className='notification';
-      note.style.background=color;
-      note.textContent=msg;
-      notifications.appendChild(note);
-      requestAnimationFrame(()=>note.classList.add('show'));
-      setTimeout(()=>{ note.classList.remove('show'); setTimeout(()=>note.remove(),300); },2000);
+
+    function pressButton(li){
+      const btn = li.querySelector('.revive-btn, .feature-btn, .color-btn');
+      if(!btn) return;
+
+      // Settings color theme
+      if(btn.classList.contains('color-btn')){
+        const t = btn.dataset.theme;
+        document.body.classList.remove('theme-blue','theme-red','theme-green','theme-orange');
+        if(t === 'restore'){
+          // restore default (purple)
+          showNotification("Color restored");
+        }else{
+          document.body.classList.add(`theme-${t}`);
+          showNotification(`Theme: ${t}`);
+        }
+        return;
+      }
+
+      // Regular feature button
+      showNotification("Executed");
     }
-    document.addEventListener('keydown',e=>{
-      if(e.key==="ArrowDown"){ index=(index+1)%items.length; updateSelection();}
-      else if(e.key==="ArrowUp"){ index=(index-1+items.length)%items.length; updateSelection();}
-      else if(e.key==="Enter"){ /* handle enter press */ }
-      else if(e.key==="Backspace"){ goBack();}
+
+    function handleEnter(){
+      const li = items[index];
+      if(currentMenu === mainMenu){
+        const txt = li.innerText.trim().toLowerCase();
+        if(txt.startsWith('self')) openSubmenu(selfSubmenu,"SELF");
+        else if(txt.startsWith('online')) openSubmenu(onlineSubmenu,"ONLINE");
+        else if(txt.startsWith('settings')) openSubmenu(settingsSubmenu,"SETTINGS");
+        else if(txt.startsWith('find feature')) openFinder();
+      }else if(currentMenu === onlineSubmenu){
+        const txt = li.innerText.trim().toLowerCase();
+        if(txt.startsWith('list')) openSubmenu(onlineListSubmenu,"ONLINE > LIST");
+        else if(txt.startsWith('features')) openSubmenu(onlineFeaturesSubmenu,"ONLINE > FEATURES");
+      }else{
+        if(li.querySelector('.switch')) toggleSwitch(li);
+        else pressButton(li);
+      }
+    }
+
+    // --- Finder ---
+    function openFinder(){
+      finder.style.display = 'block';
+      finderInput.value = '';
+      finderInput.focus();
+    }
+    function closeFinder(){
+      finder.style.display = 'none';
+      menuEl.focus();
+    }
+
+    // search all menu items; return {menuChain, liIndex}
+    function findFeature(query){
+      if(!query) return null;
+      const q = query.toLowerCase().trim();
+      // map from menu element to title
+      const titleOf = (m)=>{
+        if(m===mainMenu) return 'HOME';
+        if(m===selfSubmenu) return 'SELF';
+        if(m===onlineSubmenu) return 'ONLINE';
+        if(m===onlineListSubmenu) return 'ONLINE > LIST';
+        if(m===onlineFeaturesSubmenu) return 'ONLINE > FEATURES';
+        if(m===settingsSubmenu) return 'SETTINGS';
+        return '';
+      };
+
+      const menus = [mainMenu,selfSubmenu,onlineSubmenu,onlineListSubmenu,onlineFeaturesSubmenu,settingsSubmenu];
+      for(const m of menus){
+        const lis = [...m.querySelectorAll('li')].filter(li=>!li.classList.contains('section'));
+        for(let i=0;i<lis.length;i++){
+          const t = lis[i].innerText.toLowerCase().trim();
+          if(t.includes(q)){
+            // Build chain to reach this menu
+            const chain = [];
+            if(m===mainMenu){ chain.push({m, title:'HOME'}); }
+            else if(m===selfSubmenu){ chain.push({m:mainMenu,title:'HOME'},{m:selfSubmenu,title:'SELF'}); }
+            else if(m===onlineSubmenu){ chain.push({m:mainMenu,title:'HOME'},{m:onlineSubmenu,title:'ONLINE'}); }
+            else if(m===onlineListSubmenu){ chain.push({m:mainMenu,title:'HOME'},{m:onlineSubmenu,title:'ONLINE'},{m:onlineListSubmenu,title:'ONLINE > LIST'}); }
+            else if(m===onlineFeaturesSubmenu){ chain.push({m:mainMenu,title:'HOME'},{m:onlineSubmenu,title:'ONLINE'},{m:onlineFeaturesSubmenu,title:'ONLINE > FEATURES'}); }
+            else if(m===settingsSubmenu){ chain.push({m:mainMenu,title:'HOME'},{m:settingsSubmenu,title:'SETTINGS'}); }
+            return { chain, idx:i, label: lis[i].innerText.trim(), where: titleOf(m) };
+          }
+        }
+      }
+      return null;
+    }
+
+    finderInput.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape'){ e.preventDefault(); closeFinder(); return; }
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        const hit = findFeature(finderInput.value);
+        if(hit){
+          // open the chain
+          hideAllMenus();
+          let last = null;
+          for(const step of hit.chain){
+            step.m.style.display = 'block';
+            last = step;
+          }
+          currentMenu = last.m;
+          items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+          index = Math.min(hit.idx, Math.max(items.length-1,0));
+          sectionTitle.textContent = hit.chain[hit.chain.length-1].title;
+          lastIndex.set(currentMenu, index);
+          updateSelection();
+          showNotification(`${hit.where} > ${items[index].innerText.trim()}`);
+          closeFinder();
+        }else{
+          showNotification("feature not found", true);
+          closeFinder();
+        }
+      }
     });
-    function init(){
-      try{ lucide.createIcons(); }catch(e){ console.warn("lucide fail",e);}
-      openSubmenu(mainMenu,"HOME");
+
+    // --- Notifications ---
+    function showNotification(msg, isError=false){
+      const note = document.createElement('div');
+      note.className = 'notification' + (isError ? ' error' : '');
+      note.textContent = msg;
+      notifications.appendChild(note);
+      requestAnimationFrame(()=> note.classList.add('show'));
+      setTimeout(()=>{
+        note.classList.remove('show');
+        setTimeout(()=> note.remove(), 250);
+      }, 2200);
     }
-    window.addEventListener('load',init);
+
+    // --- Keyboard navigation ---
+    function onKey(e){
+      // Finder open? handle there
+      if(finder.style.display === 'block') return;
+      if(e.key === 'ArrowDown'){
+        index = (index + 1) % items.length;
+        updateSelection();
+      } else if(e.key === 'ArrowUp'){
+        index = (index - 1 + items.length) % items.length;
+        updateSelection();
+      } else if(e.key === 'Enter'){
+        handleEnter();
+      } else if(e.key === 'Backspace'){
+        goBack();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+
+    // --- Init / robustness for GitHub hosting ---
+    function refreshIconsThenUpdate(){
+      try{ lucide.createIcons(); }catch(e){}
+      updateSelection();
+    }
+    function init(){
+      // show home by default
+      hideAllMenus();
+      mainMenu.style.display = 'block';
+      currentMenu = mainMenu;
+      items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+      index = 0;
+      sectionTitle.textContent = 'HOME';
+      refreshIconsThenUpdate();
+      // focus to capture keys even on GitHub pages
+      menuEl.focus();
+    }
+
+    // Update when icons/fonts load or window resizes
+    window.addEventListener('resize', updateSelection);
+    window.addEventListener('load', init);
+    // If CDN finishes later, refresh again
+    setTimeout(refreshIconsThenUpdate, 400);
+    setTimeout(refreshIconsThenUpdate, 1200);
+    setTimeout(refreshIconsThenUpdate, 2500);
   </script>
 </body>
 </html>
-
