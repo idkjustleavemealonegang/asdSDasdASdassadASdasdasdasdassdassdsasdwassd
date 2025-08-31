@@ -279,21 +279,22 @@
   <!-- pin lucide version to avoid CDN 'latest' issues -->
   <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
   <script>
-  // To enter typing mode
-  window.parent.postMessage(JSON.stringify({action:"startTyping"}), "*");
-
-  // To leave typing mode
-  window.parent.postMessage(JSON.stringify({action:"stopTyping"}), "*");
-
-  /* ======== ADDED: robust bridge so DUI -> Lua works ======== */
-  (function(){
-    function shiestySend(obj){
-      try{ window.parent.postMessage(JSON.stringify(obj), "*"); }catch(e){}
-      try{ window.postMessage(JSON.stringify(obj), "*"); }catch(e){}
+  /* ========= DUI <-> LUA BRIDGE =========
+     sendToLua() prefers SendDuiMessage if your wrapper injects it.
+     Falls back to console (useful for debugging if your wrapper listens to console).
+  */
+  function sendToLua(obj){
+    const msg = JSON.stringify(obj);
+    if (typeof SendDuiMessage === "function") {
+      // Many DUI wrappers expose this in the page context
+      SendDuiMessage(msg);
+    } else if (window.macho && typeof window.macho.send === "function") {
+      // If your Macho wrapper exposed a custom API
+      window.macho.send(msg);
+    } else {
+      console.log("[DUI->LUA]", msg);
     }
-    window.__shiestySend = shiestySend;
-  })();
-  /* ========================================================== */
+  }
 
   (function(){
     const menuEl = document.getElementById('menu');
@@ -374,9 +375,7 @@
     }
 
     function setMenu(ul, title, pushHistory=true){
-      if (pushHistory) {
-        navStack.push(currentMenu);
-      }
+      if (pushHistory) navStack.push(currentMenu);
       hideAllMenus();
       ul.style.display = 'block';
       currentMenu = ul;
@@ -405,7 +404,9 @@
       setMenu(prev, title, false);
     }
 
-    // ✅ toggleSwitch now also calls the robust bridge
+    // ========= interactivity =========
+
+    // send every toggle to Lua
     function toggleSwitch(li){
       const sw = li.querySelector('.switch');
       if(!sw) return;
@@ -413,17 +414,11 @@
       const newState = on ? 'off' : 'on';
       sw.setAttribute('data-state', newState);
 
-      if ((li.dataset.feature || "").toLowerCase() === "noclip") {
-        // existing call
-        window.parent.postMessage(
-          JSON.stringify({ action:"toggleNoclip", state:newState }),
-          "*"
-        );
-        // added robust bridge
-        if (typeof window.__shiestySend === 'function') {
-          window.__shiestySend({ action:"toggleNoclip", state:newState });
-        }
-      }
+      sendToLua({
+        action: "toggle",
+        feature: (li.dataset.feature || "").toLowerCase(),
+        state: newState
+      });
 
       if(sw.dataset.role === "select-all"){
         document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
@@ -438,6 +433,10 @@
     function pressButton(li){
       if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')){
         notify("Executed","ok");
+        sendToLua({
+          action: "button",
+          feature: (li.dataset.feature || "").toLowerCase()
+        });
       }
     }
 
@@ -490,6 +489,7 @@
           pressButton(li);
         } else if (type === 'theme'){
           applyTheme(li.dataset.color);
+          sendToLua({ action:"theme", color: li.dataset.color });
         }
       }
     }
@@ -510,13 +510,13 @@
       finder.style.display = 'block';
       finderInput.value = '';
       finderInput.focus();
-      window.parent.postMessage(JSON.stringify({action:"startTyping"}), "*");
+      sendToLua({action:"startTyping"});
     }
 
     function closeFinder(){
       finder.style.display = 'none';
       menuEl.focus();
-      window.parent.postMessage(JSON.stringify({action:"stopTyping"}), "*");
+      sendToLua({action:"stopTyping"});
     }
 
     function findAndJump(q){
@@ -561,8 +561,12 @@
       closeFinder();
     }
 
+    // LUA -> DUI messages (robust JSON parsing)
     window.addEventListener("message", (event) => {
-      const data = event.data;
+      let data = event.data;
+      try { if (typeof data === "string") data = JSON.parse(data); } catch(e) {}
+      if (!data || typeof data !== "object") return;
+
       if(data.action === "navigate") {
         if(data.direction === "up") {
           index = (index - 1 + items.length) % items.length;
