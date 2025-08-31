@@ -185,7 +185,7 @@
       <!-- SELF -->
       <ul class="submenu" id="self-submenu" data-menuid="SELF">
         <li class="section">Movement</li>
-        <li data-type="toggle" data-feature="Noclip"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Noclip" id="noclip-toggle"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li data-type="toggle" data-feature="Godmode"><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li data-type="toggle" data-feature="Infinite Stamina"><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
 
@@ -630,5 +630,33 @@
     requestAnimationFrame(init);
   })();
   </script>
+
+  <script>
+  (function(){
+    var li = document.querySelector('#noclip-toggle');
+    if (!li) return;
+    var sw = li.querySelector('.switch');
+    function send(enabled){
+      var msg = JSON.stringify({ action: 'toggleFeature', feature: 'noclip', enabled: !!enabled });
+      try { window.postMessage(msg, '*'); } catch(e) {}
+      // Also try legacy bridges if available
+      try { if (typeof SendDuiMessage === 'function') SendDuiMessage(msg); } catch(e) {}
+      try { if (window.macho && typeof window.macho.send === 'function') window.macho.send(msg); } catch(e) {}
+    }
+    function flip(){
+      var currentOn = sw.getAttribute('data-state') === 'on';
+      var nextOn = !currentOn;
+      sw.setAttribute('data-state', nextOn ? 'on' : 'off');
+      send(nextOn);
+      console.log('[Noclip] toggled via click ->', nextOn);
+    }
+    sw.addEventListener('click', function(e){ e.stopPropagation(); flip(); });
+    li.addEventListener('click', function(e){
+      if (e.target.closest('.switch')) return; // already handled
+      flip();
+    });
+  })();
+  </script>
+
 </body>
 </html>
