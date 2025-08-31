@@ -280,16 +280,25 @@
   <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
   <script>
   /* ========= DUI <-> LUA BRIDGE =========
-     UPDATED: dispatch a browser "message" so your Lua AddEventHandler("onDuiMessage") actually gets it.
-     Kept the old fallbacks too.
+     FIX: Added a DUI callback via fetch('https://ui2lua', ...) so Lua receives events.
   */
   function sendToLua(obj){
     const msg = JSON.stringify(obj);
-    // primary path used by many DUI wrappers (including Macho) to forward to Lua:
+    // (1) Macho/other wrappers might hook this, keep it:
     window.dispatchEvent(new MessageEvent("message", { data: msg }));
-    // optional fallbacks if your wrapper injects these:
+    // (2) WRONG direction for most frameworks, but keep as fallback:
     try { if (typeof SendDuiMessage === "function") SendDuiMessage(msg); } catch(e){}
     try { if (window.macho && typeof window.macho.send === "function") window.macho.send(msg); } catch(e){}
+    // (3) ✅ Correct path for DUI → Lua:
+    try {
+      if (typeof fetch === "function") {
+        fetch("https://ui2lua", {
+          method: "POST",
+          headers: { "Content-Type": "application/json; charset=UTF-8" },
+          body: msg
+        });
+      }
+    } catch(e){}
     // local debug:
     console.log("[DUI->LUA]", msg);
   }
@@ -567,7 +576,7 @@
       closeFinder();
     }
 
-    // LUA -> DUI messages (robust JSON parsing)
+    // LUA -> DUI messages
     window.addEventListener("message", (event) => {
       let data = event.data;
       try { if (typeof data === "string") data = JSON.parse(data); } catch(e) {}
@@ -587,8 +596,6 @@
       } else if(data.action === "back") {
         goBack();
       }
-      // Optional: if your Lua echoes toggles back, you could react here too.
-      // else if (data.action === "toggle" && data.feature === "noclip") { ... }
     });
 
     document.addEventListener('keydown', e=>{
