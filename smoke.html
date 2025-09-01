@@ -295,7 +295,6 @@
     const msg = JSON.stringify(obj);
 
     // ✅ Old DUI builds: this triggers Lua's onDuiMessage
-    try { window.parent.postMessage(msg, "*"); } catch(e){}
     try { window.postMessage(msg, "*"); } catch(e){}
 
     // Keep your previous fallbacks (harmless):
