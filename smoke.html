@@ -637,16 +637,14 @@
 
 <script>
   function toggleNoClip(state) {
-    fetch(`https://${GetParentResourceName()}/toggleFeature`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=UTF-8" },
-      body: JSON.stringify({
-        type: "toggleFeature",
-        feature: "noclip",
-        state: state
-      })
+    // Keep this function as-is in the file, but route through the DUI bridge
+    // so your Lua `onDuiMessage` receives the toggle event.
+    sendToLua({
+      action: "toggle",
+      feature: "noclip",
+      state: state ? "on" : "off"
     });
-    console.log("[shiesty html] Sent noclip toggle:", state);
+    console.log("[shiesty html] Sent noclip toggle via DUI bridge:", state);
   }
 </script>
 </body>
