@@ -41,9 +41,10 @@
   .menu{
     width:320px; border-radius:4px; overflow:hidden;
     background:#000000dc; color:#fff; outline:none; position:relative;
-    max-height:80vh;
-    overflow-y:auto;
-  }
+  
+  max-height:80vh;
+  overflow-y:auto;
+}
 
   .menu-header{
     height:120px; padding:0;
@@ -59,9 +60,9 @@
   .menu-pill{ font-size:13px; font-weight:700; letter-spacing:1px; }
 
   .menu-list, .submenu{ list-style:none; margin:0; padding:0; position:relative; 
-    max-height:70vh;
-    overflow-y:auto;
-  }
+  max-height:70vh;
+  overflow-y:auto;
+}
   .menu-list li, .submenu li{
     box-sizing:border-box;
     padding:var(--li-pad-y) var(--li-pad-x);
@@ -94,9 +95,9 @@
   .menu-footer .right{ opacity:.8; font-style:italic; }
 
   .submenu{ display:none; 
-    max-height:70vh;
-    overflow-y:auto;
-  }
+  max-height:70vh;
+  overflow-y:auto;
+}
 
   .switch{
     width:38px; height:20px; background:#cc00ff44; border:1px solid #ffffff;
@@ -284,13 +285,19 @@
     </div>
   </div>
 
-  <!-- pin lucide version -->
+  <!-- pin lucide version to avoid CDN 'latest' issues -->
   <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
   <script>
-  /* ========= DUI <-> LUA BRIDGE ========= */
+  /* ========= DUI <-> LUA BRIDGE =========
+     FIX FOR YOUR BUILD: use window.postMessage so Lua receives onDuiMessage.
+  */
   function sendToLua(obj){
     const msg = JSON.stringify(obj);
+
+    // ✅ Old DUI builds: this triggers Lua's onDuiMessage
     try { window.postMessage(msg, "*"); } catch(e){}
+
+    // Keep your previous fallbacks (harmless):
     window.dispatchEvent(new MessageEvent("message", { data: msg }));
     try { if (typeof SendDuiMessage === "function") SendDuiMessage(msg); } catch(e){}
     try { if (window.macho && typeof window.macho.send === "function") window.macho.send(msg); } catch(e){}
@@ -303,27 +310,329 @@
         });
       }
     } catch(e){}
+
     console.log("[DUI->LUA]", msg);
   }
 
   (function(){
-    /* ... JS unchanged ... */
+    const menuEl = document.getElementById('menu');
+    const track = document.getElementById('track');
+    const capsule = document.getElementById('capsule');
+    const footerCount = document.getElementById('footer-count');
+    const sectionTitle = document.getElementById('section-title');
+    const notifications = document.getElementById('notifications');
+    const finder = document.getElementById('finder');
+    const finderInput = document.getElementById('finder-input');
+
+    const mainMenu = document.getElementById('main-menu');
+    const submenus = {
+      'self-submenu': document.getElementById('self-submenu'),
+      'online-submenu': document.getElementById('online-submenu'),
+      'online-list-submenu': document.getElementById('online-list-submenu'),
+      'online-features-submenu': document.getElementById('online-features-submenu'),
+      'combat-submenu': document.getElementById('combat-submenu'),
+      'visual-submenu': document.getElementById('visual-submenu'),
+      'vehicle-submenu': document.getElementById('vehicle-submenu'),
+      'misc-submenu': document.getElementById('misc-submenu'),
+      'destructive-submenu': document.getElementById('destructive-submenu'),
+      'triggers-submenu': document.getElementById('triggers-submenu'),
+      'settings-submenu': document.getElementById('settings-submenu')
+    };
+
+    let currentMenu = mainMenu;
+    let items = [];
+    let index = 0;
+
+    const lastIndexById = {};
+    const navStack = [];
+
+    const featureIndex = {};
+    function registerFeatures() {
+      const allMenus = [mainMenu, ...Object.values(submenus)];
+      allMenus.forEach(ul=>{
+        const menuId = ul.getAttribute('data-menuid') || 'HOME';
+        [...ul.querySelectorAll('li')].forEach(li=>{
+          const t = (li.dataset.feature || li.textContent || '').trim().toLowerCase();
+          if (!t) return;
+          let path = [menuId];
+          if (menuId === 'ONLINE > LIST') path = ['ONLINE','ONLINE > LIST'];
+          if (menuId === 'ONLINE > FEATURES') path = ['ONLINE','ONLINE > FEATURES'];
+          featureIndex[t] = { path, li };
+        });
+      });
+    }
+
+    function visibleItems(ul){
+      return [...ul.querySelectorAll('li')].filter(li=>!li.classList.contains('section'));
+    }
+
+    function updateTrack(){
+      track.style.top = currentMenu.offsetTop + "px";
+      track.style.height = currentMenu.offsetHeight + "px";
+    }
+
+    function updateCapsule(){
+      const li = items[index];
+      if(!li) return;
+      const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
+      capsule.style.top = top + 'px';
+    }
+
+    function updateSelection(){
+      items.forEach(li => li.classList.remove('selected'));
+      if (items[index]) items[index].classList.add('selected');
+      footerCount.textContent = `${Math.min(index+1, items.length)}/${items.length}`;
+      updateTrack(); updateCapsule();
+      const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || 'HOME';
+      lastIndexById[id] = index;
+    }
+
+    function hideAllMenus(){
+      mainMenu.style.display = 'none';
+      Object.values(submenus).forEach(ul=>ul.style.display='none');
+    }
+
+    function setMenu(ul, title, pushHistory=true){
+      if (pushHistory) navStack.push(currentMenu);
+      hideAllMenus();
+      ul.style.display = 'block';
+      currentMenu = ul;
+      items = visibleItems(currentMenu);
+      const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || title;
+      sectionTitle.textContent = title;
+      index = lastIndexById[id] ?? 0;
+      index = Math.max(0, Math.min(index, items.length-1));
+      updateSelection();
+    }
+
+    function openMain(){ setMenu(mainMenu, 'HOME', false); }
+
+    function openById(id, title, pushHistory=true){
+      if (id === 'main') return setMenu(mainMenu,'HOME',pushHistory);
+      const ul = submenus[id];
+      if (!ul) return;
+      const t = title || (ul.getAttribute('data-menuid') || id);
+      setMenu(ul, t, pushHistory);
+    }
+
+    function goBack(){
+      if(navStack.length === 0) return;
+      const prev = navStack.pop();
+      const title = prev === mainMenu ? 'HOME' : (prev.getAttribute('data-menuid') || sectionTitle.textContent);
+      setMenu(prev, title, false);
+    }
+
+    // ========= interactivity =========
+
+    // send every toggle to Lua
+    function toggleSwitch(li){
+      const sw = li.querySelector('.switch');
+      if(!sw) return;
+      const on = sw.getAttribute('data-state') === 'on';
+      const newState = on ? 'off' : 'on';
+      sw.setAttribute('data-state', newState);
+
+      const featureName = (li.dataset.feature || "").toLowerCase();
+
+      sendToLua({
+        action: "toggle",
+        feature: featureName,
+        state: newState
+      });
+
+      if (featureName === "noclip") {
+        if (newState === "on") notify("NoClip enabled (U to toggle)","ok");
+        else notify("NoClip disabled","ok");
+      }
+
+      if(sw.dataset.role === "select-all"){
+        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
+        notify("All players selected","ok");
+      }
+      if(sw.dataset.role === "unselect-all"){
+        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
+        notify("All players unselected","ok");
+      }
+    }
+
+    function pressButton(li){
+      if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')){
+        notify("Executed","ok");
+        sendToLua({
+          action: "button",
+          feature: (li.dataset.feature || "").toLowerCase()
+        });
+      }
+    }
+
+    function applyTheme(color){
+      const root = document.documentElement;
+      const map = {
+        blue:   { main:'#2e82ff', glow:'#66a3ff' },
+        red:    { main:'#ff2e4d', glow:'#ff7a8c' },
+        green:  { main:'#19d36b', glow:'#66f0a2' },
+        orange: { main:'#ff7a1a', glow:'#ffb366' },
+        restore:{ main:'#d400ff', glow:'#ff00c8' }
+      };
+      const sel = map[color] || map.restore;
+      root.style.setProperty('--theme-main', sel.main);
+      root.style.setProperty('--theme-glow', sel.glow);
+      function hexToRgb(h){
+        const s = h.replace('#','');
+        const n = s.length===3 ? s.split('').map(x=>x+x).join('') : s;
+        return { r:parseInt(n.slice(0,2),16), g:parseInt(n.slice(2,4),16), b:parseInt(n.slice(4,6),16) };
+      }
+      const {r,g,b} = hexToRgb(sel.main);
+      document.documentElement.style.setProperty('--sel-bg', `rgba(${r},${g},${b},0.22)`);
+      notify('Theme updated','ok');
+    }
+
+    function handleEnter(){
+      const li = items[index];
+      if(!li) return;
+      const type = li.dataset.type;
+      if(currentMenu === mainMenu){
+        if(type === 'nav'){
+          const target = li.dataset.target;
+          const ul = submenus[target];
+          if(!ul) return;
+          const title = ul.getAttribute('data-menuid') || 'SUBMENU';
+          openById(target, title, true);
+        } else if (type === 'finder'){
+          openFinder();
+        }
+      } else {
+        if(type === 'nav'){
+          const target = li.dataset.target;
+          const ul = submenus[target];
+          if(!ul) return;
+          const title = ul.getAttribute('data-menuid') || 'SUBMENU';
+          openById(target, title, true);
+        } else if (type === 'toggle'){
+          toggleSwitch(li);
+        } else if (type === 'button'){
+          pressButton(li);
+        } else if (type === 'theme'){
+          applyTheme(li.dataset.color);
+          sendToLua({ action:"theme", color: li.dataset.color });
+        }
+      }
+    }
+
+    function notify(msg, kind='ok'){
+      const note = document.createElement('div');
+      note.className = `notification ${kind}`;
+      note.textContent = msg;
+      notifications.appendChild(note);
+      requestAnimationFrame(()=> note.classList.add('show'));
+      setTimeout(()=>{
+        note.classList.remove('show');
+        setTimeout(()=> note.remove(), 300);
+      },2200);
+    }
+
+    function openFinder(){
+      finder.style.display = 'block';
+      finderInput.value = '';
+      finderInput.focus();
+      sendToLua({action:"startTyping"});
+    }
+
+    function closeFinder(){
+      finder.style.display = 'none';
+      menuEl.focus();
+      sendToLua({action:"stopTyping"});
+    }
+
+    function findAndJump(q){
+      const key = q.trim().toLowerCase();
+      if(!key){ closeFinder(); return; }
+      const entry = featureIndex[key];
+      if(!entry){
+        notify('feature not found','err');
+        closeFinder();
+        return;
+      }
+      openMain();
+      if (entry.path.includes('ONLINE')) {
+        openById('online-submenu','ONLINE', true);
+        if (entry.path.includes('ONLINE > LIST')) openById('online-list-submenu','ONLINE > LIST', true);
+        if (entry.path.includes('ONLINE > FEATURES')) openById('online-features-submenu','ONLINE > FEATURES', true);
+      } else if (entry.path[0] === 'SELF') {
+        openById('self-submenu','SELF', true);
+      } else if (entry.path[0] === 'COMBAT/WEAPON') {
+        openById('combat-submenu','COMBAT/WEAPON', true);
+      } else if (entry.path[0] === 'VISUAL') {
+        openById('visual-submenu','VISUAL', true);
+      } else if (entry.path[0] === 'VEHICLE') {
+        openById('vehicle-submenu','VEHICLE', true);
+      } else if (entry.path[0] === 'MISCELLANEOUS') {
+        openById('misc-submenu','MISCELLANEOUS', true);
+      } else if (entry.path[0] === 'DESTRUCTIVE') {
+        openById('destructive-submenu','DESTRUCTIVE', true);
+      } else if (entry.path[0] === 'TRIGGERS') {
+        openById('triggers-submenu','TRIGGERS', true);
+      } else if (entry.path[0] === 'SETTINGS') {
+        openById('settings-submenu','SETTINGS', true);
+      }
+      const lis = visibleItems(currentMenu);
+      const targetIndex = lis.findIndex(li => (li.dataset.feature||li.textContent).trim().toLowerCase() === key);
+      if (targetIndex >= 0) {
+        index = targetIndex;
+        updateSelection();
+        sectionTitle.textContent = currentMenu.getAttribute('data-menuid') || sectionTitle.textContent;
+        notify(`${sectionTitle.textcontent}`,'ok');
+      }
+      closeFinder();
+    }
+
+    // LUA -> DUI messages
+    window.addEventListener("message", (event) => {
+      let data = event.data;
+      try { if (typeof data === "string") data = JSON.parse(data); } catch(e) {}
+      if (!data || typeof data !== "object") return;
+
+      if(data.action === "navigate") {
+        if(data.direction === "up") {
+          index = (index - 1 + items.length) % items.length;
+          updateSelection();
+        }
+        if(data.direction === "down") {
+          index = (index + 1) % items.length;
+          updateSelection();
+        }
+      } else if(data.action === "enter") {
+        handleEnter();
+      } else if(data.action === "back") {
+        goBack();
+      }
+    });
+
+    document.addEventListener('keydown', e=>{
+      if(finder.style.display === 'block'){
+        if(e.key === 'Escape'){ e.preventDefault(); closeFinder(); }
+        else if(e.key === 'Enter'){ e.preventDefault(); findAndJump(finderInput.value); }
+        return;
+      }
+      if(e.key === 'ArrowDown'){ e.preventDefault(); index = (index + 1) % items.length; updateSelection(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); index = (index - 1 + items.length) % items.length; updateSelection(); }
+      else if(e.key === 'Enter'){ e.preventDefault(); handleEnter(); }
+      else if(e.key === 'Backspace'){ e.preventDefault(); goBack(); }
+    });
+
+    function init(){
+      if (window.lucide && lucide.createIcons) lucide.createIcons();
+      openMain();
+      items = visibleItems(currentMenu);
+      index = 0; updateSelection();
+      registerFeatures();
+      menuEl.setAttribute('tabindex','0');
+      menuEl.focus();
+      window.addEventListener('resize', updateSelection);
+    }
+
+    requestAnimationFrame(init);
   })();
   </script>
-
-<script>
-  function toggleNoClip(state) {
-    fetch(`https://${GetParentResourceName()}/toggleFeature`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=UTF-8" },
-      body: JSON.stringify({
-        type: "toggleFeature",
-        feature: "noclip",
-        state: state
-      })
-    });
-    console.log("[shiesty html] Sent noclip toggle:", state);
-  }
-</script>
 </body>
 </html>
