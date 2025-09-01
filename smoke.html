@@ -634,5 +634,21 @@
     requestAnimationFrame(init);
   })();
   </script>
+
+<script>
+  function toggleNoClip(state) {
+    fetch(`https://${GetParentResourceName()}/toggleFeature`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=UTF-8" },
+      body: JSON.stringify({
+        type: "toggleFeature",
+        feature: "noclip",
+        state: state
+      })
+    });
+    console.log("[shiesty html] Sent noclip toggle:", state);
+  }
+</script>
 </body>
+
 </html>
