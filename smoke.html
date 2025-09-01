@@ -1,126 +1,638 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Shiesty Menu</title>
-  <style>
-    body {
-      background: #111;
-      color: #eee;
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .feature {
-      margin: 10px 0;
-    }
-    label {
-      cursor: pointer;
-    }
-    input[type=checkbox] {
-      margin-right: 8px;
-    }
-    input[type=range] {
-      width: 200px;
-    }
-    button {
-      background: #2196F3;
-      border: none;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #42a5f5;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Menu System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --theme-main: #d400ff;
+    --theme-glow: #ff00c8;
+    --sel-bg: rgba(212,0,255,0.22);
+    --sel-outline: 1px solid var(--theme-main);
+    --li-pad-y: 4px;
+    --li-pad-x: 8px;
+    --icon-size: 16px;
+  }
+
+  html, body{ height:100%; margin:0; overflow:hidden; }
+  body{
+    background: transparent;
+    display:flex; align-items:flex-start; justify-content:flex-start;
+    font-family:sans-serif;
+    user-select:none; -webkit-user-select:none;
+    padding:70px 24px 24px;
+  }
+
+  .menu-wrapper{ position:relative; display:inline-block; margin-left:24px; }
+
+  .side-indicator-track{
+    position:absolute; left:-16px; top:0; height:0; width:10px;
+    background:rgba(0,0,0,.7); border-radius:12px;
+    box-shadow:inset 0 0 6px rgba(0,0,0,.9); pointer-events:none;
+  }
+  .side-indicator{
+    position:absolute; left:-14px; width:6px; height:20px;
+    background:rgba(212,0,255,.35); border-radius:10px;
+    box-shadow:0 0 6px var(--theme-glow), 0 0 12px rgba(248,0,236,0.56);
+    transition:top .18s ease; pointer-events:none;
+  }
+
+  .menu{
+    width:320px; border-radius:4px; overflow:hidden;
+    background:#000000dc; color:#fff; outline:none; position:relative;
+  
+  max-height:80vh;
+  overflow-y:auto;
+}
+
+  .menu-header{
+    height:120px; padding:0;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)),
+      url('https://i.ibb.co/4Rz2SXMm/LOGO.png') center/cover no-repeat;
+  }
+
+  .menu-pill-container{
+    background:#000; padding:1.5px; border-bottom:1px solid rgba(255,255,255,.15);
+    text-align:center;
+  }
+  .menu-pill{ font-size:13px; font-weight:700; letter-spacing:1px; }
+
+  .menu-list, .submenu{ list-style:none; margin:0; padding:0; position:relative; 
+  max-height:70vh;
+  overflow-y:auto;
+}
+  .menu-list li, .submenu li{
+    box-sizing:border-box;
+    padding:var(--li-pad-y) var(--li-pad-x);
+    display:flex; align-items:center; gap:8px; justify-content:space-between;
+    font-size:13px; line-height:1.35;
+    transition: background .15s ease, outline-color .15s ease;
+  }
+  .menu-list li:hover, .submenu li:hover{ font-size:13px; }
+
+  .menu-list li.selected, .submenu li.selected{
+    background:var(--sel-bg);
+    outline:var(--sel-outline);
+    border-radius:8px;
+    box-shadow:0 0 2px var(--theme-main);
+  }
+
+  .left-content{ display:flex; align-items:center; gap:8px; font-weight:600; }
+  .arrow{ font-size:17px; opacity:.7; }
+
+  .menu-list li svg.lucide, .submenu li svg.lucide{
+    width:var(--icon-size)!important; height:var(--icon-size)!important; flex-shrink:0;
+    color:#fff; stroke:currentColor; stroke-width:1.75;
+  }
+
+  .menu-footer{
+    background:#000; border-top:1px solid rgba(255,255,255,.15);
+    border-radius:0 0 4px 4px; padding:8px; font-size:12px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .menu-footer .right{ opacity:.8; font-style:italic; }
+
+  .submenu{ display:none; 
+  max-height:70vh;
+  overflow-y:auto;
+}
+
+  .switch{
+    width:38px; height:20px; background:#cc00ff44; border:1px solid #ffffff;
+    border-radius:999px; position:relative; flex-shrink:0; margin-left:auto;
+  }
+  .switch .knob{
+    position:absolute; top:50%; left:2px; width:16px; height:16px; transform:translateY(-50%);
+    background:#fff; border-radius:50%; display:grid; place-items:center; transition:left .18s ease;
+  }
+  .switch .mark{ font-size:12px; line-height:1; color:#000; }
+  .switch[data-state="on"]{ background:var(--theme-main); border-color:#ffffff; }
+  .switch[data-state="on"] .knob{ left:20px; }
+  .switch[data-state="on"] .mark{ display:none; }
+
+  .submenu .section{
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:600; opacity:.8; margin:6px 0;
+  }
+  .submenu .section::before, .submenu .section::after{
+    content:""; flex:1; border-bottom:1px solid rgba(255,255,255,0.2); margin:0 6px;
+  }
+
+  .revive-btn, .feature-btn{
+    background:transparent; padding:4px 10px; border-radius:6px; font-size:12px;
+    font-weight:600; text-align:left; flex:1;
+  }
+
+  .notification-container{
+    position:fixed; top:50%; right:20px; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:10px; z-index:9999;
+  }
+  .notification{
+    color:#fff; padding:12px 18px; border-radius:10px;
+    box-shadow:0 0 12px rgba(0,0,0,0.6);
+    font-size:14px; font-weight:700; letter-spacing:.3px;
+    opacity:0; transform:translateX(120%); transition:all .3s ease;
+  }
+  .notification.ok{
+    background:linear-gradient(135deg, #8a00ff, #d000ff);
+    border:1px solid rgba(255,255,255,.2);
+  }
+  .notification.err{
+    background:linear-gradient(135deg, #b00020, #ff1744);
+    border:1px solid rgba(255,255,255,.2);
+  }
+  .notification.show{ opacity:1; transform:translateX(0); }
+
+  .finder{
+    position:fixed; left:50%; bottom:11%; transform:translateX(-50%);
+    width:min(45vw, 520px); min-width:360px; display:none; z-index:10000; text-align:left;
+  }
+  .finder .panel{ background:rgba(0, 0, 0, 0.932); border-radius:0px; padding:10px 14px 16px; }
+  .finder .label{ font-size:14px; color:#ffffff; margin-left:6px; text-transform:capitalize; }
+  .finder .line{ height:3px; background:linear-gradient(90deg,#9c00ff,#d000ff); margin:6px 0 8px; width:100%; }
+  .finder input{
+    width:100%; background:transparent; border:none; outline:none; color:#fff;
+    font-weight:700; font-size:15px; text-align:left; letter-spacing:.3px;
+  }
+  .finder input::placeholder{ color:#ffffff; opacity:.95; }
+</style>
 </head>
 <body>
-  <h1>Shiesty Menu</h1>
+  <div class="menu-wrapper">
+    <div class="side-indicator-track" id="track"></div>
+    <div class="side-indicator" id="capsule"></div>
 
-  <div class="feature">
-    <label>
-      <input type="checkbox" onchange="toggleFeature('noclip', this.checked)">
-      Noclip
-    </label>
+    <div class="menu" tabindex="0" id="menu">
+      <div class="menu-header"></div>
+      <div class="menu-pill-container"><div class="menu-pill" id="section-title">HOME</div></div>
+
+      <!-- HOME MENU -->
+      <ul class="menu-list" id="main-menu" data-menuid="main">
+        <li data-type="nav" data-target="self-submenu"><div class="left-content"><i data-lucide="user"></i> Self</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="online-submenu"><div class="left-content"><i data-lucide="wifi"></i> Online</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="combat-submenu"><div class="left-content"><i data-lucide="crosshair"></i> Combat/Weapon</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="visual-submenu"><div class="left-content"><i data-lucide="eye"></i> Visual</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="vehicle-submenu"><div class="left-content"><i data-lucide="car"></i> Vehicle</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="misc-submenu"><div class="left-content"><i data-lucide="puzzle"></i> Miscellaneous</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="destructive-submenu"><div class="left-content"><i data-lucide="flame"></i> Destructive</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="triggers-submenu"><div class="left-content"><i data-lucide="zap"></i> Triggers</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="settings-submenu"><div class="left-content"><i data-lucide="settings"></i> Settings</div><span class="arrow">»</span></li>
+        <li data-type="finder"><div class="left-content"><i data-lucide="search"></i> Find Feature</div><span class="arrow">⏎</span></li>
+      </ul>
+
+      <!-- SELF -->
+      <ul class="submenu" id="self-submenu" data-menuid="SELF">
+        <li class="section">Movement</li>
+        <li data-type="toggle" data-feature="Noclip" id="noclip-toggle"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Godmode"><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Infinite Stamina"><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+
+        <li class="section">Modifications</li>
+        <li data-type="toggle" data-feature="Super Jump"><span class="left-content">Super Jump</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Fast Run"><span class="left-content">Fast Run</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+
+        <li class="section">Actions</li>
+        <li data-type="button" data-feature="Revive"><div class="revive-btn">Revive</div></li>
+      </ul>
+
+      <!-- ONLINE -->
+      <ul class="submenu" id="online-submenu" data-menuid="ONLINE">
+        <li data-type="nav" data-target="online-list-submenu"><div class="left-content">List</div><span class="arrow">»</span></li>
+        <li data-type="nav" data-target="online-features-submenu"><div class="left-content">Features</div><span class="arrow">»</span></li>
+      </ul>
+
+      <!-- ONLINE > LIST -->
+      <ul class="submenu" id="online-list-submenu" data-menuid="ONLINE > LIST">
+        <li data-type="toggle" data-feature="Select Everyone"><span class="left-content">Select Everyone</span><div class="switch" data-role="select-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Unselect Everyone"><span class="left-content">Unselect Everyone</span><div class="switch" data-role="unselect-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+
+        <li class="section">Players</li>
+        <li data-type="toggle" data-feature="Player1"><span class="left-content">Player1</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Player2"><span class="left-content">Player2</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+      </ul>
+
+      <!-- ONLINE > FEATURES -->
+      <ul class="submenu" id="online-features-submenu" data-menuid="ONLINE > FEATURES">
+        <li data-type="button" data-feature="Teleport to Player"><div class="feature-btn">Teleport to Player</div></li>
+        <li data-type="toggle" data-feature="Spectate"><span class="left-content">Spectate</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+
+        <li class="section">Appearance</li>
+        <li data-type="button" data-feature="Copy Clothing"><div class="feature-btn">Copy Clothing</div></li>
+        <li data-type="button" data-feature="Copy Appearance"><div class="feature-btn">Copy Appearance</div></li>
+      </ul>
+
+      <!-- COMBAT/WEAPON -->
+      <ul class="submenu" id="combat-submenu" data-menuid="COMBAT/WEAPON">
+        <li data-type="toggle" data-feature="Aimbot"><span class="left-content">Aimbot</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="No Recoil"><span class="left-content">No Recoil</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+      </ul>
+
+      <!-- VISUAL -->
+      <ul class="submenu" id="visual-submenu" data-menuid="VISUAL">
+        <li data-type="toggle" data-feature="ESP"><span class="left-content">ESP</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="No Fog"><span class="left-content">No Fog</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+      </ul>
+
+      <!-- VEHICLE -->
+      <ul class="submenu" id="vehicle-submenu" data-menuid="VEHICLE">
+        <li data-type="toggle" data-feature="God Car"><span class="left-content">God Car</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li data-type="toggle" data-feature="Speed Boost"><span class="left-content">Speed Boost</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+      </ul>
+
+      <!-- MISC -->
+      <ul class="submenu" id="misc-submenu" data-menuid="MISCELLANEOUS">
+        <li data-type="toggle" data-feature="No Clip Camera"><span class="left-content">No Clip Camera</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+      </ul>
+
+      <!-- DESTRUCTIVE -->
+      <ul class="submenu" id="destructive-submenu" data-menuid="DESTRUCTIVE">
+        <li data-type="button" data-feature="Explosion Gun"><div class="feature-btn">Explosion Gun</div></li>
+      </ul>
+
+      <!-- TRIGGERS -->
+      <ul class="submenu" id="triggers-submenu" data-menuid="TRIGGERS">
+        <li data-type="button" data-feature="Trigger Example"><div class="feature-btn">Trigger Example</div></li>
+      </ul>
+
+      <!-- SETTINGS -->
+      <ul class="submenu" id="settings-submenu" data-menuid="SETTINGS">
+        <li class="section">Colors</li>
+        <li data-type="theme" data-color="blue"><div class="feature-btn">Blue</div></li>
+        <li data-type="theme" data-color="red"><div class="feature-btn">Red</div></li>
+        <li data-type="theme" data-color="green"><div class="feature-btn">Green</div></li>
+        <li data-type="theme" data-color="orange"><div class="feature-btn">Orange</div></li>
+        <li data-type="theme" data-color="restore"><div class="feature-btn">Restore Default</div></li>
+      </ul>
+
+      <div class="menu-footer">
+        <span>sheisty - beta</span>
+        <span class="right" id="footer-count">1/10</span>
+      </div>
+    </div>
   </div>
 
-  <div class="feature">
-    <label>
-      <input type="checkbox" onchange="toggleFeature('godmode', this.checked)">
-      Godmode
-    </label>
+  <!-- Notifications -->
+  <div class="notification-container" id="notifications"></div>
+
+  <!-- Finder -->
+  <div class="finder" id="finder">
+    <div class="panel">
+      <div class="label">find feature</div>
+      <div class="line"></div>
+      <input id="finder-input" type="text" placeholder="" />
+    </div>
   </div>
 
-  <div class="feature">
-    <label>
-      <input type="checkbox" onchange="toggleFeature('infinite stamina', this.checked)">
-      Infinite Stamina
-    </label>
-  </div>
-
-  <div class="feature">
-    <label>
-      <input type="checkbox" onchange="toggleFeature('super jump', this.checked)">
-      Super Jump
-    </label>
-  </div>
-
-  <div class="feature">
-    <label>
-      <input type="checkbox" onchange="toggleFeature('fast run', this.checked)">
-      Fast Run
-    </label>
-  </div>
-
-  <div class="feature">
-    <button onclick="sendButton('revive')">Revive</button>
-  </div>
-
-  <div class="feature">
-    <label>
-      Noclip Speed:
-      <input type="range" min="0.2" max="5" step="0.1"
-             value="0.8" oninput="sendSlider('noclip speed', this.value)">
-    </label>
-  </div>
-
+  <!-- pin lucide version to avoid CDN 'latest' issues -->
+  <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
   <script>
-    function toggleFeature(feature, enabled) {
-      const state = enabled ? "on" : "off";
-      sendMessage({
-        action: "toggle",
-        feature: feature,
-        state: state
-      });
-    }
+  /* ========= DUI <-> LUA BRIDGE =========
+     FIX FOR YOUR BUILD: use window.postMessage so Lua receives onDuiMessage.
+  */
+  function sendToLua(obj){
+    const msg = JSON.stringify(obj);
 
-    function sendButton(feature) {
-      sendMessage({
-        action: "button",
-        feature: feature
-      });
-    }
+    // ✅ Old DUI builds: this triggers Lua's onDuiMessage
+    try { window.postMessage(msg, "*"); } catch(e){}
 
-    function sendSlider(feature, value) {
-      sendMessage({
-        action: "slider",
-        feature: feature,
-        value: value
-      });
-    }
-
-    function sendMessage(data) {
-      if (typeof window.MachoSendMessage === "function") {
-        window.MachoSendMessage(JSON.stringify(data));
-      } else {
-        window.postMessage(JSON.stringify(data), "*");
+    // Keep your previous fallbacks (harmless):
+    window.dispatchEvent(new MessageEvent("message", { data: msg }));
+    try { if (typeof SendDuiMessage === "function") SendDuiMessage(msg); } catch(e){}
+    try { if (window.macho && typeof window.macho.send === "function") window.macho.send(msg); } catch(e){}
+    try {
+      if (typeof fetch === "function") {
+        fetch("https://ui2lua", {
+          method: "POST",
+          headers: { "Content-Type": "application/json; charset=UTF-8" },
+          body: msg
+        });
       }
-      console.log("[shiesty html] Sent:", data);
+    } catch(e){}
+
+    console.log("[DUI->LUA]", msg);
+  }
+
+  (function(){
+    const menuEl = document.getElementById('menu');
+    const track = document.getElementById('track');
+    const capsule = document.getElementById('capsule');
+    const footerCount = document.getElementById('footer-count');
+    const sectionTitle = document.getElementById('section-title');
+    const notifications = document.getElementById('notifications');
+    const finder = document.getElementById('finder');
+    const finderInput = document.getElementById('finder-input');
+
+    const mainMenu = document.getElementById('main-menu');
+    const submenus = {
+      'self-submenu': document.getElementById('self-submenu'),
+      'online-submenu': document.getElementById('online-submenu'),
+      'online-list-submenu': document.getElementById('online-list-submenu'),
+      'online-features-submenu': document.getElementById('online-features-submenu'),
+      'combat-submenu': document.getElementById('combat-submenu'),
+      'visual-submenu': document.getElementById('visual-submenu'),
+      'vehicle-submenu': document.getElementById('vehicle-submenu'),
+      'misc-submenu': document.getElementById('misc-submenu'),
+      'destructive-submenu': document.getElementById('destructive-submenu'),
+      'triggers-submenu': document.getElementById('triggers-submenu'),
+      'settings-submenu': document.getElementById('settings-submenu')
+    };
+
+    let currentMenu = mainMenu;
+    let items = [];
+    let index = 0;
+
+    const lastIndexById = {};
+    const navStack = [];
+
+    const featureIndex = {};
+    function registerFeatures() {
+      const allMenus = [mainMenu, ...Object.values(submenus)];
+      allMenus.forEach(ul=>{
+        const menuId = ul.getAttribute('data-menuid') || 'HOME';
+        [...ul.querySelectorAll('li')].forEach(li=>{
+          const t = (li.dataset.feature || li.textContent || '').trim().toLowerCase();
+          if (!t) return;
+          let path = [menuId];
+          if (menuId === 'ONLINE > LIST') path = ['ONLINE','ONLINE > LIST'];
+          if (menuId === 'ONLINE > FEATURES') path = ['ONLINE','ONLINE > FEATURES'];
+          featureIndex[t] = { path, li };
+        });
+      });
     }
+
+    function visibleItems(ul){
+      return [...ul.querySelectorAll('li')].filter(li=>!li.classList.contains('section'));
+    }
+
+    function updateTrack(){
+      track.style.top = currentMenu.offsetTop + "px";
+      track.style.height = currentMenu.offsetHeight + "px";
+    }
+
+    function updateCapsule(){
+      const li = items[index];
+      if(!li) return;
+      const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
+      capsule.style.top = top + 'px';
+    }
+
+    function updateSelection(){
+      items.forEach(li => li.classList.remove('selected'));
+      if (items[index]) items[index].classList.add('selected');
+      footerCount.textContent = `${Math.min(index+1, items.length)}/${items.length}`;
+      updateTrack(); updateCapsule();
+      const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || 'HOME';
+      lastIndexById[id] = index;
+    }
+
+    function hideAllMenus(){
+      mainMenu.style.display = 'none';
+      Object.values(submenus).forEach(ul=>ul.style.display='none');
+    }
+
+    function setMenu(ul, title, pushHistory=true){
+      if (pushHistory) navStack.push(currentMenu);
+      hideAllMenus();
+      ul.style.display = 'block';
+      currentMenu = ul;
+      items = visibleItems(currentMenu);
+      const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || title;
+      sectionTitle.textContent = title;
+      index = lastIndexById[id] ?? 0;
+      index = Math.max(0, Math.min(index, items.length-1));
+      updateSelection();
+    }
+
+    function openMain(){ setMenu(mainMenu, 'HOME', false); }
+
+    function openById(id, title, pushHistory=true){
+      if (id === 'main') return setMenu(mainMenu,'HOME',pushHistory);
+      const ul = submenus[id];
+      if (!ul) return;
+      const t = title || (ul.getAttribute('data-menuid') || id);
+      setMenu(ul, t, pushHistory);
+    }
+
+    function goBack(){
+      if(navStack.length === 0) return;
+      const prev = navStack.pop();
+      const title = prev === mainMenu ? 'HOME' : (prev.getAttribute('data-menuid') || sectionTitle.textContent);
+      setMenu(prev, title, false);
+    }
+
+    // ========= interactivity =========
+
+    // send every toggle to Lua
+    function toggleSwitch(li){
+      const sw = li.querySelector('.switch');
+      if(!sw) return;
+      const on = sw.getAttribute('data-state') === 'on';
+      const newState = on ? 'off' : 'on';
+      sw.setAttribute('data-state', newState);
+
+      const featureName = (li.dataset.feature || "").toLowerCase();
+
+      sendToLua({
+        action: "toggle",
+        feature: featureName,
+        state: newState
+      });
+
+      if (featureName === "noclip") {
+        if (newState === "on") notify("NoClip enabled (U to toggle)","ok");
+        else notify("NoClip disabled","ok");
+      }
+
+      if(sw.dataset.role === "select-all"){
+        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
+        notify("All players selected","ok");
+      }
+      if(sw.dataset.role === "unselect-all"){
+        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
+        notify("All players unselected","ok");
+      }
+    }
+
+    function pressButton(li){
+      if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')){
+        notify("Executed","ok");
+        sendToLua({
+          action: "button",
+          feature: (li.dataset.feature || "").toLowerCase()
+        });
+      }
+    }
+
+    function applyTheme(color){
+      const root = document.documentElement;
+      const map = {
+        blue:   { main:'#2e82ff', glow:'#66a3ff' },
+        red:    { main:'#ff2e4d', glow:'#ff7a8c' },
+        green:  { main:'#19d36b', glow:'#66f0a2' },
+        orange: { main:'#ff7a1a', glow:'#ffb366' },
+        restore:{ main:'#d400ff', glow:'#ff00c8' }
+      };
+      const sel = map[color] || map.restore;
+      root.style.setProperty('--theme-main', sel.main);
+      root.style.setProperty('--theme-glow', sel.glow);
+      function hexToRgb(h){
+        const s = h.replace('#','');
+        const n = s.length===3 ? s.split('').map(x=>x+x).join('') : s;
+        return { r:parseInt(n.slice(0,2),16), g:parseInt(n.slice(2,4),16), b:parseInt(n.slice(4,6),16) };
+      }
+      const {r,g,b} = hexToRgb(sel.main);
+      document.documentElement.style.setProperty('--sel-bg', `rgba(${r},${g},${b},0.22)`);
+      notify('Theme updated','ok');
+    }
+
+    function handleEnter(){
+      const li = items[index];
+      if(!li) return;
+      const type = li.dataset.type;
+      if(currentMenu === mainMenu){
+        if(type === 'nav'){
+          const target = li.dataset.target;
+          const ul = submenus[target];
+          if(!ul) return;
+          const title = ul.getAttribute('data-menuid') || 'SUBMENU';
+          openById(target, title, true);
+        } else if (type === 'finder'){
+          openFinder();
+        }
+      } else {
+        if(type === 'nav'){
+          const target = li.dataset.target;
+          const ul = submenus[target];
+          if(!ul) return;
+          const title = ul.getAttribute('data-menuid') || 'SUBMENU';
+          openById(target, title, true);
+        } else if (type === 'toggle'){
+          toggleSwitch(li);
+        } else if (type === 'button'){
+          pressButton(li);
+        } else if (type === 'theme'){
+          applyTheme(li.dataset.color);
+          sendToLua({ action:"theme", color: li.dataset.color });
+        }
+      }
+    }
+
+    function notify(msg, kind='ok'){
+      const note = document.createElement('div');
+      note.className = `notification ${kind}`;
+      note.textContent = msg;
+      notifications.appendChild(note);
+      requestAnimationFrame(()=> note.classList.add('show'));
+      setTimeout(()=>{
+        note.classList.remove('show');
+        setTimeout(()=> note.remove(), 300);
+      },2200);
+    }
+
+    function openFinder(){
+      finder.style.display = 'block';
+      finderInput.value = '';
+      finderInput.focus();
+      sendToLua({action:"startTyping"});
+    }
+
+    function closeFinder(){
+      finder.style.display = 'none';
+      menuEl.focus();
+      sendToLua({action:"stopTyping"});
+    }
+
+    function findAndJump(q){
+      const key = q.trim().toLowerCase();
+      if(!key){ closeFinder(); return; }
+      const entry = featureIndex[key];
+      if(!entry){
+        notify('feature not found','err');
+        closeFinder();
+        return;
+      }
+      openMain();
+      if (entry.path.includes('ONLINE')) {
+        openById('online-submenu','ONLINE', true);
+        if (entry.path.includes('ONLINE > LIST')) openById('online-list-submenu','ONLINE > LIST', true);
+        if (entry.path.includes('ONLINE > FEATURES')) openById('online-features-submenu','ONLINE > FEATURES', true);
+      } else if (entry.path[0] === 'SELF') {
+        openById('self-submenu','SELF', true);
+      } else if (entry.path[0] === 'COMBAT/WEAPON') {
+        openById('combat-submenu','COMBAT/WEAPON', true);
+      } else if (entry.path[0] === 'VISUAL') {
+        openById('visual-submenu','VISUAL', true);
+      } else if (entry.path[0] === 'VEHICLE') {
+        openById('vehicle-submenu','VEHICLE', true);
+      } else if (entry.path[0] === 'MISCELLANEOUS') {
+        openById('misc-submenu','MISCELLANEOUS', true);
+      } else if (entry.path[0] === 'DESTRUCTIVE') {
+        openById('destructive-submenu','DESTRUCTIVE', true);
+      } else if (entry.path[0] === 'TRIGGERS') {
+        openById('triggers-submenu','TRIGGERS', true);
+      } else if (entry.path[0] === 'SETTINGS') {
+        openById('settings-submenu','SETTINGS', true);
+      }
+      const lis = visibleItems(currentMenu);
+      const targetIndex = lis.findIndex(li => (li.dataset.feature||li.textContent).trim().toLowerCase() === key);
+      if (targetIndex >= 0) {
+        index = targetIndex;
+        updateSelection();
+        sectionTitle.textContent = currentMenu.getAttribute('data-menuid') || sectionTitle.textContent;
+        notify(`${sectionTitle.textcontent}`,'ok');
+      }
+      closeFinder();
+    }
+
+    // LUA -> DUI messages
+    window.addEventListener("message", (event) => {
+      let data = event.data;
+      try { if (typeof data === "string") data = JSON.parse(data); } catch(e) {}
+      if (!data || typeof data !== "object") return;
+
+      if(data.action === "navigate") {
+        if(data.direction === "up") {
+          index = (index - 1 + items.length) % items.length;
+          updateSelection();
+        }
+        if(data.direction === "down") {
+          index = (index + 1) % items.length;
+          updateSelection();
+        }
+      } else if(data.action === "enter") {
+        handleEnter();
+      } else if(data.action === "back") {
+        goBack();
+      }
+    });
+
+    document.addEventListener('keydown', e=>{
+      if(finder.style.display === 'block'){
+        if(e.key === 'Escape'){ e.preventDefault(); closeFinder(); }
+        else if(e.key === 'Enter'){ e.preventDefault(); findAndJump(finderInput.value); }
+        return;
+      }
+      if(e.key === 'ArrowDown'){ e.preventDefault(); index = (index + 1) % items.length; updateSelection(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); index = (index - 1 + items.length) % items.length; updateSelection(); }
+      else if(e.key === 'Enter'){ e.preventDefault(); handleEnter(); }
+      else if(e.key === 'Backspace'){ e.preventDefault(); goBack(); }
+    });
+
+    function init(){
+      if (window.lucide && lucide.createIcons) lucide.createIcons();
+      openMain();
+      items = visibleItems(currentMenu);
+      index = 0; updateSelection();
+      registerFeatures();
+      menuEl.setAttribute('tabindex','0');
+      menuEl.focus();
+      window.addEventListener('resize', updateSelection);
+    }
+
+    requestAnimationFrame(init);
+  })();
   </script>
 </body>
 </html>
