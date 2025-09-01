@@ -634,5 +634,49 @@
     requestAnimationFrame(init);
   })();
   </script>
+
+<!-- injected: noclip switch sync (non-invasive) -->
+<script>
+(function(){
+  function findSwitchEl(feature){
+    if (!feature) feature = "noclip";
+    var selectors = [
+      "#" + feature + "-switch",
+      '.switch[data-feature="' + feature + '"]',
+      '[data-feature="' + feature + '"] .switch',
+      '[data-id="' + feature + '-switch"]',
+      '[data-switch="' + feature + '"]'
+    ];
+    for (var i=0;i<selectors.length;i++){
+      var el = document.querySelector(selectors[i]);
+      if (el) return el;
+    }
+    // Fallback: search list items that include the feature name and contain a .switch
+    var nodes = document.querySelectorAll('li, .row, .item, .menu-list li, .submenu li');
+    var needle = String(feature).toLowerCase();
+    for (var j=0;j<nodes.length;j++){
+      var n = nodes[j];
+      var text = (n.textContent || '').toLowerCase();
+      if (text.indexOf(needle) !== -1){
+        var sw = n.querySelector('.switch');
+        if (sw) return sw;
+      }
+    }
+    return null;
+  }
+
+  window.addEventListener("message", function(event){
+    var data = event && event.data;
+    try { if (typeof data === "string") data = JSON.parse(data); } catch(e){ return; }
+    if (!data || data.action !== "setSwitch") return;
+
+    var el = findSwitchEl(data.feature || "noclip");
+    if (el) {
+      el.setAttribute("data-state", data.state ? "on" : "off");
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
