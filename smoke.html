@@ -5,8 +5,6 @@
 <title>Menu System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
-
   :root{
     --theme-main: #d400ff;
     --theme-glow: #ff00c8;
@@ -159,33 +157,6 @@
     font-weight:700; font-size:15px; text-align:left; letter-spacing:.3px;
   }
   .finder input::placeholder{ color:#ffffff; opacity:.95; }
-/* Custom font only for Freecam label */
-li[data-feature="Freecam"] .left-content {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 600; /* slightly bold */
-  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-}
-
-  /* Freecam overlay */
-  #freecam-overlay {
-    position: fixed;
-    top: 15%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 99999;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 20px;
-    color: #fff;
-    text-shadow: 0 0 6px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.6);
-    display: none;
-    line-height: 1.6;
-  }
-  #freecam-overlay .active {
-    color: #03c4ff;
-    text-shadow: 0 0 8px #03c4ff, 0 0 16px #03c4ff;
-  }
 </style>
 </head>
 <body>
@@ -708,32 +679,52 @@ li[data-feature="Freecam"] .left-content {
 </script>
 
 
-  <!-- Freecam overlay container -->
-  <div id="freecam-overlay"></div>
+<!-- ========= HELPER FUNCTIONS FOR EASY CONFIG ========= -->
+<script>
+// Add a new toggle feature to a submenu
+function addToggle(menuId, featureName) {
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
 
-  <script>
-  // Freecam overlay update handler
-  window.addEventListener("message", (event) => {
-    let data = event.data;
-    try { if (typeof data === "string") data = JSON.parse(data); } catch(e) {}
-    if (!data || typeof data !== "object") return;
+  const li = document.createElement("li");
+  li.dataset.type = "toggle";
+  li.dataset.feature = featureName;
+  li.innerHTML = `
+    <span class="left-content">${featureName}</span>
+    <div class="switch" data-state="off">
+      <div class="knob"><span class="mark">✕</span></div>
+    </div>`;
 
-    if(data.action === "freecamFeatures"){
-      const overlay = document.getElementById("freecam-overlay");
-      overlay.innerHTML = "";
-      data.features.forEach((f, i)=>{
-        const div = document.createElement("div");
-        div.textContent = f;
-        if(i+1 === data.current) div.classList.add("active");
-        overlay.appendChild(div);
-      });
-      overlay.style.display = "block";
-    }
-    if(data.action === "hideFreecamFeatures"){
-      document.getElementById("freecam-overlay").style.display = "none";
-    }
-  });
-  </script>
+  menu.appendChild(li);
+}
+
+// Add a new button feature to a submenu
+function addButton(menuId, featureName) {
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+
+  const li = document.createElement("li");
+  li.dataset.type = "button";
+  li.dataset.feature = featureName;
+  li.innerHTML = `<div class="feature-btn">${featureName}</div>`;
+
+  menu.appendChild(li);
+}
+
+// Add a navigation link to another submenu
+function addNav(menuId, targetId, label) {
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+
+  const li = document.createElement("li");
+  li.dataset.type = "nav";
+  li.dataset.target = targetId;
+  li.innerHTML = `<div class="left-content">${label}</div><span class="arrow">»</span>`;
+
+  menu.appendChild(li);
+}
+</script>
+
 </body>
 </html>
 
