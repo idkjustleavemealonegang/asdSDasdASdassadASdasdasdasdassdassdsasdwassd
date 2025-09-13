@@ -1,269 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Menu System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  :root{
-    --theme-main: #d400ff;
-    --theme-glow: #ff00c8;
-    --sel-bg: rgba(212,0,255,0.22);
-    --sel-outline: 1px solid var(--theme-main);
-    --li-pad-y: 4px;
-    --li-pad-x: 8px;
-    --icon-size: 16px;
-  }
+  <meta charset="UTF-8" />
+  <title>Menu System</title>
+  <style>
+    :root{
+      --sel-bg: #d400ff8a;
+      --sel-border: 1px solid #d400ff;
+      --li-pad-y: 4px;
+      --li-pad-x: 8px;
+      --icon-size: 0px;
+    }
 
-  html, body{ height:100%; margin:0; overflow:hidden; }
-  body{
-    background: transparent;
-    display:flex; align-items:flex-start; justify-content:flex-start;
-    font-family:sans-serif;
-    user-select:none; -webkit-user-select:none;
-    padding:70px 24px 24px;
-  }
+    body{
+      background:transparent;            /* black background */
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start; /* keep menu left */
+      font-family:sans-serif;
+      user-select:none;           /* prevent highlight */
+    }
 
-  .menu-wrapper{ position:relative; display:inline-block; margin-left:24px; }
+    .menu-wrapper{
+      position:relative;
+      display:inline-block;
+      margin-left:40px; /* left offset */
+    }
 
-  .side-indicator-track{
-    position:absolute; left:-16px; top:0; height:0; width:10px;
-    background:rgba(0,0,0,.7); border-radius:12px;
-    box-shadow:inset 0 0 6px rgba(0,0,0,.9); pointer-events:none;
-  }
-  .side-indicator{
-    position:absolute; left:-14px; width:6px; height:20px;
-    background:rgba(212,0,255,.35); border-radius:10px;
-    box-shadow:0 0 6px var(--theme-glow), 0 0 12px rgba(248,0,236,0.56);
-    transition:top .18s ease; pointer-events:none;
-  }
+    .side-indicator-track{
+      position:absolute;
+      left:-16px;
+      top:0;
+      height:0;
+      width:10px;
+      background:rgba(0,0,0,.7);
+      border-radius:12px;
+      box-shadow:inset 0 0 6px rgba(0,0,0,.9);
+      pointer-events:none;
+    }
 
-  .menu{
-    width:320px; border-radius:4px; overflow:hidden;
-    background:#000000dc; color:#fff; outline:none; position:relative;
-  
-  max-height:80vh;
-  overflow-y:auto;
-}
+    .side-indicator{
+      position:absolute;
+      left:-14px;
+      width:6px;
+      height:20px;
+      background:#c300ffbe;
+      border-radius:10px;
+      box-shadow:0 0 6px #ff00c8, 0 0 12px #f800ec8e;
+      transition:top .18s ease;
+      pointer-events:none;
+    }
 
-  .menu-header{
-    height:120px; padding:0;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)),
-      url('https://i.ibb.co/4Rz2SXMm/LOGO.png') center/cover no-repeat;
-  }
+    .menu{
+      width:320px;
+      border-radius:4px;
+      overflow:hidden;
+      background:#000000dc;
+      color:#fff;
+      outline:none;
+      position:relative;
+    }
 
-  .menu-pill-container{
-    background:#000; padding:1.5px; border-bottom:1px solid rgba(255,255,255,.15);
-    text-align:center;
-  }
-  .menu-pill{ font-size:13px; font-weight:700; letter-spacing:1px; }
+    .menu-header{
+      background:#000;
+      padding:0;
+    }
+    .menu-header img{
+      width:100%;
+      display:block;
+    }
 
-  .menu-list, .submenu{ list-style:none; margin:0; padding:0; position:relative; 
-  max-height:70vh;
-  overflow-y:auto;
-}
-  .menu-list li, .submenu li{
-    box-sizing:border-box;
-    padding:var(--li-pad-y) var(--li-pad-x);
-    display:flex; align-items:center; gap:8px; justify-content:space-between;
-    font-size:13px; line-height:1.35;
-    transition: background .15s ease, outline-color .15s ease;
-  }
-  .menu-list li:hover, .submenu li:hover{ font-size:13px; }
+    .menu-pill-container{
+      background:#000;
+      padding:1.5px;
+      border-bottom:1px solid rgba(255,255,255,.15);
+      text-align:center;
+    }
 
-  .menu-list li.selected, .submenu li.selected{
-    background:var(--sel-bg);
-    outline:var(--sel-outline);
-    border-radius:8px;
-    box-shadow:0 0 2px var(--theme-main);
-  }
+    .menu-pill{
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:1px;
+    }
 
-  .left-content{ display:flex; align-items:center; gap:8px; font-weight:600; }
-  .arrow{ font-size:17px; opacity:.7; }
+    .menu-list, .submenu{
+      list-style:none;
+      margin:0;
+      padding:0;
+      position:relative;
+    }
 
-  .menu-list li svg.lucide, .submenu li svg.lucide{
-    width:var(--icon-size)!important; height:var(--icon-size)!important; flex-shrink:0;
-    color:#fff; stroke:currentColor; stroke-width:1.75;
-  }
+    .menu-list li, .submenu li{
+      padding:var(--li-pad-y) var(--li-pad-x);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      justify-content:space-between;
+      pointer-events:none; /* keyboard-only; hover doesn't change size */
+      font-size:13px;
+    }
 
-  .menu-footer{
-    background:#000; border-top:1px solid rgba(255,255,255,.15);
-    border-radius:0 0 4px 4px; padding:8px; font-size:12px;
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .menu-footer .right{ opacity:.8; font-style:italic; }
+    .menu-list li.selected, .submenu li.selected{
+      height: 17px;
+      background:var(--sel-bg);
+      border:var(--sel-border);
+      border-radius:4px;
+      box-shadow:0 0 3px #d000fa, 0 0 1px #d400ff;
+    }
 
-  .submenu{ display:none; 
-  max-height:70vh;
-  overflow-y:auto;
-}
+    .left-content{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:600;
+    }
 
-  .switch{
-    width:38px; height:20px; background:#cc00ff44; border:1px solid #ffffff;
-    border-radius:999px; position:relative; flex-shrink:0; margin-left:auto;
-  }
-  .switch .knob{
-    position:absolute; top:50%; left:2px; width:16px; height:16px; transform:translateY(-50%);
-    background:#fff; border-radius:50%; display:grid; place-items:center; transition:left .18s ease;
-  }
-  .switch .mark{ font-size:12px; line-height:1; color:#000; }
-  .switch[data-state="on"]{ background:var(--theme-main); border-color:#ffffff; }
-  .switch[data-state="on"] .knob{ left:20px; }
-  .switch[data-state="on"] .mark{ display:none; }
+    .arrow{
+      font-size:17px;
+      opacity:0.7;
+    }
 
-  .submenu .section{
-    display:flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:600; opacity:.8; margin:6px 0;
-  }
-  .submenu .section::before, .submenu .section::after{
-    content:""; flex:1; border-bottom:1px solid rgba(255,255,255,0.2); margin:0 6px;
-  }
+    .menu-list li svg.lucide, .submenu li svg.lucide{
+      width:var(--icon-size)!important;
+      height:var(--icon-size)!important;
+      flex-shrink:0;
+      color:#fff;
+      stroke:currentColor;
+      stroke-width:1.75;
+    }
 
-  .revive-btn, .feature-btn{
-    background:transparent; padding:4px 10px; border-radius:6px; font-size:12px;
-    font-weight:600; text-align:left; flex:1;
-  }
+    .menu-footer{
+      background:#000;
+      border-top:1px solid rgba(255,255,255,.15);
+      border-radius:0 0 4px 4px;
+      padding:8px;
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
 
-  .notification-container{
-    position:fixed; top:50%; right:20px; transform:translateY(-50%);
-    display:flex; flex-direction:column; gap:10px; z-index:9999;
-  }
-  .notification{
-    color:#fff; padding:12px 18px; border-radius:10px;
-    box-shadow:0 0 12px rgba(0,0,0,0.6);
-    font-size:14px; font-weight:700; letter-spacing:.3px;
-    opacity:0; transform:translateX(120%); transition:all .3s ease;
-  }
-  .notification.ok{
-    background:linear-gradient(135deg, #8a00ff, #d000ff);
-    border:1px solid rgba(255,255,255,.2);
-  }
-  .notification.err{
-    background:linear-gradient(135deg, #b00020, #ff1744);
-    border:1px solid rgba(255,255,255,.2);
-  }
-  .notification.show{ opacity:1; transform:translateX(0); }
+    .menu-footer .right{
+      opacity:.8;
+      font-style:italic;
+    }
 
-  .finder{
-    position:fixed; left:50%; bottom:11%; transform:translateX(-50%);
-    width:min(45vw, 520px); min-width:360px; display:none; z-index:10000; text-align:left;
-  }
-  .finder .panel{ background:rgba(0, 0, 0, 0.932); border-radius:0px; padding:10px 14px 16px; }
-  .finder .label{ font-size:14px; color:#ffffff; margin-left:6px; text-transform:capitalize; }
-  .finder .line{ height:3px; background:linear-gradient(90deg,#9c00ff,#d000ff); margin:6px 0 8px; width:100%; }
-  .finder input{
-    width:100%; background:transparent; border:none; outline:none; color:#fff;
-    font-weight:700; font-size:15px; text-align:left; letter-spacing:.3px;
-  }
-  .finder input::placeholder{ color:#ffffff; opacity:.95; }
-</style>
+    .submenu{ display:none; }
+
+    .switch{
+      width:35px;
+      height:15px;
+      background:#302b2f;
+      border:1px solid #ffffff;
+      border-radius:999px;
+      position:relative;
+      flex-shrink:0;
+      margin-left:auto;
+    }
+    .switch .knob{
+      position:absolute;
+      top:50%;
+      left:1px;
+      width:14px;
+      height:14px;
+      transform:translateY(-50%);
+      background:#ffffff;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      transition:left .18s ease;
+    }
+    .switch .mark{ font-size:0px; line-height:1; color:#302b2f; }
+    .switch[data-state="on"]{ background:#302b2f; border-color:#ffffff; }
+    .switch[data-state="off"]{ background:#302b2f; border-color:#ffffff; }   
+    .switch[data-state="on"] .knob{ left:20px; }
+    .switch[data-state="on"] .mark{ display:none; }
+
+    .submenu .section{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:600;
+      opacity:0.8;
+      margin:6px 0;
+    }
+    .submenu .section::before,
+    .submenu .section::after{
+      content:"";
+      flex:1;
+      border-bottom:1px solid rgba(255,255,255,0.2);
+      margin:0 6px;
+    }
+
+    .revive-btn, .feature-btn{
+      background:transparent;
+      padding:4px 10px;
+      border-radius:6px;
+      font-size:12px;
+      font-weight:600;
+      text-align:left;
+      flex:1;
+    }
+
+    /* Notifications */
+    .notification-container{
+      position:fixed;
+      top:50%;
+      right:20px;
+      transform:translateY(-50%);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      z-index:9999;
+    }
+    .notification{
+      background: linear-gradient(90deg,#6a00ff,#b300ff); /* purple gradient */
+      color:#fff;
+      padding:12px 20px;
+      border-radius:10px;
+      box-shadow:0 0 12px rgba(0,0,0,0.8);
+      font-size:15px;
+      font-weight:700;
+      opacity:0;
+      transform:translateX(120%);
+      transition:all 0.3s ease;
+    }
+    .notification.error{
+      background: linear-gradient(90deg,#ff0033,#ff5555); /* red for not found */
+    }
+    .notification.show{
+      opacity:1;
+      transform:translateX(0);
+    }
+
+    /* === Bottom-center "Find Feature" box (smaller, black background, bold smaller text) === */
+    .finder {
+      position: fixed;
+      left: 50%;
+      bottom: 11%;
+      transform: translateX(-50%);
+      width: min(50vw, 700px);  /* smaller */
+      min-width: 420px;
+      display: none;            /* shown on demand */
+      z-index: 10000;
+      text-align: left;
+    }
+    .finder .panel{
+      background: rgba(0,0,0,0.95);   /* black background */
+      border-radius: 10px;
+      padding: 10px 14px 16px;
+    }
+    .finder .label {
+      font-size: 14px;
+      color: #ddd;
+      margin-left: 6px;
+      text-transform: lowercase;
+    }
+    .finder .line {
+      height: 3px;
+      background: linear-gradient(90deg,#9c00ff,#d000ff);
+      margin: 6px 0 8px;
+      width: 100%;
+    }
+    .finder input {
+      width: 100%;
+      background: transparent;
+      border: none;          /* no border */
+      outline: none;
+      color: #fff;
+      font-weight: 700;      /* bold typing */
+      font-size: 20px;       /* smaller text */
+      text-align: center;
+      letter-spacing: .3px;
+    }
+    .finder input::placeholder { color:#ffffff; opacity:.95; }
+  </style>
 </head>
 <body>
   <div class="menu-wrapper">
     <div class="side-indicator-track" id="track"></div>
     <div class="side-indicator" id="capsule"></div>
-
     <div class="menu" tabindex="0" id="menu">
-      <div class="menu-header"></div>
+      <div class="menu-header">
+        <img src="https://i.ibb.co/4Rz2SXMm/LOGO.png" alt="Header">
+      </div>
       <div class="menu-pill-container"><div class="menu-pill" id="section-title">HOME</div></div>
 
       <!-- HOME MENU -->
-      <ul class="menu-list" id="main-menu" data-menuid="main">
-        <li data-type="nav" data-target="self-submenu"><div class="left-content"><i data-lucide="user"></i> Self</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="online-submenu"><div class="left-content"><i data-lucide="wifi"></i> Online</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="combat-submenu"><div class="left-content"><i data-lucide="crosshair"></i> Combat/Weapon</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="visual-submenu"><div class="left-content"><i data-lucide="eye"></i> Visual</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="vehicle-submenu"><div class="left-content"><i data-lucide="car"></i> Vehicle</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="misc-submenu"><div class="left-content"><i data-lucide="puzzle"></i> Miscellaneous</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="destructive-submenu"><div class="left-content"><i data-lucide="flame"></i> Destructive</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="triggers-submenu"><div class="left-content"><i data-lucide="zap"></i> Triggers</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="settings-submenu"><div class="left-content"><i data-lucide="settings"></i> Settings</div><span class="arrow">»</span></li>
-        <li data-type="finder"><div class="left-content"><i data-lucide="search"></i> Find Feature</div><span class="arrow">⏎</span></li>
+      <ul class="menu-list" id="main-menu">
+        <li><div class="left-content"><i data-lucide="user"></i> Self</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="wifi"></i> Online</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="crosshair"></i> Combat/Weapon</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="eye"></i> Visual</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="car"></i> Vehicle</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="puzzle"></i> Miscellaneous</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="flame"></i> Destructive</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="zap"></i> Triggers</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="settings"></i> Settings</div><span class="arrow">»</span></li>
+        <li><div class="left-content"><i data-lucide="search"></i> Find Feature</div><span class="arrow">»</span></li>
       </ul>
 
-      <!-- SELF -->
-      <ul class="submenu" id="self-submenu" data-menuid="SELF">
+      <!-- SELF SUBMENU -->
+      <ul class="submenu" id="self-submenu">
         <li class="section">Movement</li>
-        <li data-type="toggle" data-feature="Noclip" id="noclip-toggle"><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="Godmode"><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="Infinite Stamina"><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+        <li><span class="left-content">Noclip</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Godmode</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Infinite Stamina</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Modifications</li>
-        <li data-type="toggle" data-feature="Super Jump"><span class="left-content">Super Jump</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="Fast Run"><span class="left-content">Fast Run</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+        <li><span class="left-content">Super Jump</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Fast Run</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Actions</li>
-        <li data-type="button" data-feature="Revive"><div class="revive-btn">Revive</div></li>
+        <li><div class="revive-btn">Revive</div></li>
       </ul>
 
-      <!-- ONLINE -->
-      <ul class="submenu" id="online-submenu" data-menuid="ONLINE">
-        <li data-type="nav" data-target="online-list-submenu"><div class="left-content">List</div><span class="arrow">»</span></li>
-        <li data-type="nav" data-target="online-features-submenu"><div class="left-content">Features</div><span class="arrow">»</span></li>
+      <!-- ONLINE MENU -->
+      <ul class="submenu" id="online-submenu">
+        <li><div class="left-content">List</div><span class="arrow">»</span></li>
+        <li><div class="left-content">Features</div><span class="arrow">»</span></li>
       </ul>
 
       <!-- ONLINE > LIST -->
-      <ul class="submenu" id="online-list-submenu" data-menuid="ONLINE > LIST">
-        <li data-type="toggle" data-feature="Select Everyone"><span class="left-content">Select Everyone</span><div class="switch" data-role="select-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="Unselect Everyone"><span class="left-content">Unselect Everyone</span><div class="switch" data-role="unselect-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+      <ul class="submenu" id="online-list-submenu">
+        <li><span class="left-content">Select Everyone</span><div class="switch" data-role="select-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Unselect Everyone</span><div class="switch" data-role="unselect-all" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Players</li>
-        <li data-type="toggle" data-feature="Player1"><span class="left-content">Player1</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="Player2"><span class="left-content">Player2</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Player1</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
+        <li><span class="left-content">Player2</span><div class="switch player-switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
       </ul>
 
       <!-- ONLINE > FEATURES -->
-      <ul class="submenu" id="online-features-submenu" data-menuid="ONLINE > FEATURES">
-        <li data-type="button" data-feature="Teleport to Player"><div class="feature-btn">Teleport to Player</div></li>
-        <li data-type="toggle" data-feature="Spectate"><span class="left-content">Spectate</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-
+      <ul class="submenu" id="online-features-submenu">
+        <li><div class="feature-btn">Teleport to Player</div></li>
+        <li><span class="left-content">Spectate</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
         <li class="section">Appearance</li>
-        <li data-type="button" data-feature="Copy Clothing"><div class="feature-btn">Copy Clothing</div></li>
-        <li data-type="button" data-feature="Copy Appearance"><div class="feature-btn">Copy Appearance</div></li>
+        <li><div class="feature-btn">Copy Clothing</div></li>
+        <li><div class="feature-btn">Copy Appearance</div></li>
       </ul>
 
-      <!-- COMBAT/WEAPON -->
-      <ul class="submenu" id="combat-submenu" data-menuid="COMBAT/WEAPON">
-        <li data-type="toggle" data-feature="Aimbot"><span class="left-content">Aimbot</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="No Recoil"><span class="left-content">No Recoil</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-      </ul>
-
-      <!-- VISUAL -->
-      <ul class="submenu" id="visual-submenu" data-menuid="VISUAL">
-        <li data-type="toggle" data-feature="ESP"><span class="left-content">ESP</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="No Fog"><span class="left-content">No Fog</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-      </ul>
-
-      <!-- VEHICLE -->
-      <ul class="submenu" id="vehicle-submenu" data-menuid="VEHICLE">
-        <li data-type="toggle" data-feature="God Car"><span class="left-content">God Car</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-        <li data-type="toggle" data-feature="Speed Boost"><span class="left-content">Speed Boost</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-      </ul>
-
-      <!-- MISC -->
-      <ul class="submenu" id="misc-submenu" data-menuid="MISCELLANEOUS">
-        <li data-type="toggle" data-feature="Freecam"><span class="left-content">No Clip Camera</span><div class="switch" data-state="off"><div class="knob"><span class="mark">✕</span></div></div></li>
-      </ul>
-
-      <!-- DESTRUCTIVE -->
-      <ul class="submenu" id="destructive-submenu" data-menuid="DESTRUCTIVE">
-        <li data-type="button" data-feature="Explosion Gun"><div class="feature-btn">Explosion Gun</div></li>
-      </ul>
-
-      <!-- TRIGGERS -->
-      <ul class="submenu" id="triggers-submenu" data-menuid="TRIGGERS">
-        <li data-type="button" data-feature="Trigger Example"><div class="feature-btn">Trigger Example</div></li>
-      </ul>
-
-      <!-- SETTINGS -->
-      <ul class="submenu" id="settings-submenu" data-menuid="SETTINGS">
+      <!-- SETTINGS SUBMENU -->
+      <ul class="submenu" id="settings-submenu">
         <li class="section">Colors</li>
-        <li data-type="theme" data-color="blue"><div class="feature-btn">Blue</div></li>
-        <li data-type="theme" data-color="red"><div class="feature-btn">Red</div></li>
-        <li data-type="theme" data-color="green"><div class="feature-btn">Green</div></li>
-        <li data-type="theme" data-color="orange"><div class="feature-btn">Orange</div></li>
-        <li data-type="theme" data-color="restore"><div class="feature-btn">Restore Default</div></li>
+        <li><div class="feature-btn" data-color="blue">Blue</div></li>
+        <li><div class="feature-btn" data-color="red">Red</div></li>
+        <li><div class="feature-btn" data-color="green">Green</div></li>
+        <li><div class="feature-btn" data-color="orange">Orange</div></li>
+        <li><div class="feature-btn" data-color="restore">Restore</div></li>
       </ul>
 
       <div class="menu-footer">
@@ -273,458 +357,322 @@
     </div>
   </div>
 
-  <!-- Notifications -->
-  <div class="notification-container" id="notifications"></div>
-
-  <!-- Finder -->
+  <!-- Finder Box (shows when user presses Enter on "Find Feature") -->
   <div class="finder" id="finder">
     <div class="panel">
       <div class="label">find feature</div>
       <div class="line"></div>
-      <input id="finder-input" type="text" placeholder="" />
+      <input id="finder-input" placeholder="type here..." />
     </div>
   </div>
 
-  <!-- pin lucide version to avoid CDN 'latest' issues -->
-  <script defer src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
+  <!-- Notifications -->
+  <div class="notification-container" id="notifications"></div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-  /* ========= DUI <-> LUA BRIDGE =========
-     FIX FOR YOUR BUILD: use window.postMessage so Lua receives onDuiMessage.
-  */
-  function sendToLua(obj){
-    const msg = JSON.stringify(obj);
+    window.onload = () => {
+      lucide.createIcons();
 
-    // ✅ Old DUI builds: this triggers Lua's onDuiMessage
-    try { window.postMessage(msg, "*"); } catch(e){}
+      const menuEl = document.getElementById('menu');
+      const track = document.getElementById('track');
+      const capsule = document.getElementById('capsule');
+      const footerCount = document.getElementById('footer-count');
+      const sectionTitle = document.getElementById('section-title');
+      const mainMenu = document.getElementById('main-menu');
+      const selfSubmenu = document.getElementById('self-submenu');
+      const onlineSubmenu = document.getElementById('online-submenu');
+      const onlineListSubmenu = document.getElementById('online-list-submenu');
+      const onlineFeaturesSubmenu = document.getElementById('online-features-submenu');
+      const settingsSubmenu = document.getElementById('settings-submenu');
+      const notifications = document.getElementById('notifications');
 
-    // Keep your previous fallbacks (harmless):
-    window.dispatchEvent(new MessageEvent("message", { data: msg }));
-    try { if (typeof SendDuiMessage === "function") SendDuiMessage(msg); } catch(e){}
-    try { if (window.macho && typeof window.macho.send === "function") window.macho.send(msg); } catch(e){}
-    try {
-      if (typeof fetch === "function") {
-        fetch("https://ui2lua", {
-          method: "POST",
-          headers: { "Content-Type": "application/json; charset=UTF-8" },
-          body: msg
-        });
-      }
-    } catch(e){}
+      const finder = document.getElementById('finder');
+      const finderInput = document.getElementById('finder-input');
 
-    console.log("[DUI->LUA]", msg);
-  }
+      const ALL_MENUS = [mainMenu,selfSubmenu,onlineSubmenu,onlineListSubmenu,onlineFeaturesSubmenu,settingsSubmenu];
 
-  (function(){
-    const menuEl = document.getElementById('menu');
-    const track = document.getElementById('track');
-    const capsule = document.getElementById('capsule');
-    const footerCount = document.getElementById('footer-count');
-    const sectionTitle = document.getElementById('section-title');
-    const notifications = document.getElementById('notifications');
-    const finder = document.getElementById('finder');
-    const finderInput = document.getElementById('finder-input');
+      let currentMenu = mainMenu;
+      let items = [...currentMenu.querySelectorAll('li')];
+      let index = 0;
 
-    const mainMenu = document.getElementById('main-menu');
-    const submenus = {
-      'self-submenu': document.getElementById('self-submenu'),
-      'online-submenu': document.getElementById('online-submenu'),
-      'online-list-submenu': document.getElementById('online-list-submenu'),
-      'online-features-submenu': document.getElementById('online-features-submenu'),
-      'combat-submenu': document.getElementById('combat-submenu'),
-      'visual-submenu': document.getElementById('visual-submenu'),
-      'vehicle-submenu': document.getElementById('vehicle-submenu'),
-      'misc-submenu': document.getElementById('misc-submenu'),
-      'destructive-submenu': document.getElementById('destructive-submenu'),
-      'triggers-submenu': document.getElementById('triggers-submenu'),
-      'settings-submenu': document.getElementById('settings-submenu')
-    };
+      // remember cursor per menu
+      const lastIndexById = {};
+      // manual stack for back navigation (fixes "stuck" bug)
+      const menuStack = [];
 
-    let currentMenu = mainMenu;
-    let items = [];
-    let index = 0;
-
-    const lastIndexById = {};
-    const navStack = [];
-
-    const featureIndex = {};
-    function registerFeatures() {
-      const allMenus = [mainMenu, ...Object.values(submenus)];
-      allMenus.forEach(ul=>{
-        const menuId = ul.getAttribute('data-menuid') || 'HOME';
-        [...ul.querySelectorAll('li')].forEach(li=>{
-          const t = (li.dataset.feature || li.textContent || '').trim().toLowerCase();
-          if (!t) return;
-          let path = [menuId];
-          if (menuId === 'ONLINE > LIST') path = ['ONLINE','ONLINE > LIST'];
-          if (menuId === 'ONLINE > FEATURES') path = ['ONLINE','ONLINE > FEATURES'];
-          featureIndex[t] = { path, li };
-        });
-      });
-    }
-
-    function visibleItems(ul){
-      return [...ul.querySelectorAll('li')].filter(li=>!li.classList.contains('section'));
-    }
-
-    function updateTrack(){
-      track.style.top = currentMenu.offsetTop + "px";
-      track.style.height = currentMenu.offsetHeight + "px";
-    }
-
-    function updateCapsule(){
-      const li = items[index];
-      if(!li) return;
-      const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
-      capsule.style.top = top + 'px';
-    }
-
-    function updateSelection(){
-      items.forEach(li => li.classList.remove('selected'));
-      if (items[index]) items[index].classList.add('selected');
-      footerCount.textContent = `${Math.min(index+1, items.length)}/${items.length}`;
-      updateTrack(); updateCapsule();
-      const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || 'HOME';
-      lastIndexById[id] = index;
-    }
-
-    function hideAllMenus(){
-      mainMenu.style.display = 'none';
-      Object.values(submenus).forEach(ul=>ul.style.display='none');
-    }
-
-    function setMenu(ul, title, pushHistory=true){
-      if (pushHistory) navStack.push(currentMenu);
-      hideAllMenus();
-      ul.style.display = 'block';
-      currentMenu = ul;
-      items = visibleItems(currentMenu);
-      const id = currentMenu.getAttribute('data-menuid') || currentMenu.id || title;
-      sectionTitle.textContent = title;
-      index = lastIndexById[id] ?? 0;
-      index = Math.max(0, Math.min(index, items.length-1));
-      updateSelection();
-    }
-
-    function openMain(){ setMenu(mainMenu, 'HOME', false); }
-
-    function openById(id, title, pushHistory=true){
-      if (id === 'main') return setMenu(mainMenu,'HOME',pushHistory);
-      const ul = submenus[id];
-      if (!ul) return;
-      const t = title || (ul.getAttribute('data-menuid') || id);
-      setMenu(ul, t, pushHistory);
-    }
-
-    function goBack(){
-      if(navStack.length === 0) return;
-      const prev = navStack.pop();
-      const title = prev === mainMenu ? 'HOME' : (prev.getAttribute('data-menuid') || sectionTitle.textContent);
-      setMenu(prev, title, false);
-    }
-
-    // ========= interactivity =========
-
-    // send every toggle to Lua
-    function toggleSwitch(li){
-      const sw = li.querySelector('.switch');
-      if(!sw) return;
-      const on = sw.getAttribute('data-state') === 'on';
-      const newState = on ? 'off' : 'on';
-      sw.setAttribute('data-state', newState);
-
-      const featureName = (li.dataset.feature || "").toLowerCase();
-
-      sendToLua({
-        action: "toggle",
-        feature: featureName,
-        state: newState
-      });
-
-      if (featureName === "noclip") {
-        if (newState === "on") notify("NoClip enabled (U to toggle)","ok");
-        else notify("NoClip disabled","ok");
-      }
-
-      if(sw.dataset.role === "select-all"){
-        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
-        notify("All players selected","ok");
-      }
-      if(sw.dataset.role === "unselect-all"){
-        document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
-        notify("All players unselected","ok");
-      }
-    }
-
-    function pressButton(li){
-      if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')){
-        notify("Executed","ok");
-        sendToLua({
-          action: "button",
-          feature: (li.dataset.feature || "").toLowerCase()
-        });
-      }
-    }
-
-    function applyTheme(color){
-      const root = document.documentElement;
-      const map = {
-        blue:   { main:'#2e82ff', glow:'#66a3ff' },
-        red:    { main:'#ff2e4d', glow:'#ff7a8c' },
-        green:  { main:'#19d36b', glow:'#66f0a2' },
-        orange: { main:'#ff7a1a', glow:'#ffb366' },
-        restore:{ main:'#d400ff', glow:'#ff00c8' }
-      };
-      const sel = map[color] || map.restore;
-      root.style.setProperty('--theme-main', sel.main);
-      root.style.setProperty('--theme-glow', sel.glow);
-      function hexToRgb(h){
-        const s = h.replace('#','');
-        const n = s.length===3 ? s.split('').map(x=>x+x).join('') : s;
-        return { r:parseInt(n.slice(0,2),16), g:parseInt(n.slice(2,4),16), b:parseInt(n.slice(4,6),16) };
-      }
-      const {r,g,b} = hexToRgb(sel.main);
-      document.documentElement.style.setProperty('--sel-bg', `rgba(${r},${g},${b},0.22)`);
-      notify('Theme updated','ok');
-    }
-
-    function handleEnter(){
-      const li = items[index];
-      if(!li) return;
-      const type = li.dataset.type;
-      if(currentMenu === mainMenu){
-        if(type === 'nav'){
-          const target = li.dataset.target;
-          const ul = submenus[target];
-          if(!ul) return;
-          const title = ul.getAttribute('data-menuid') || 'SUBMENU';
-          openById(target, title, true);
-        } else if (type === 'finder'){
-          openFinder();
+      /* THEME (settings) */
+      function setTheme(color){
+        const root = document.documentElement.style;
+        const map = {
+          blue:  ['#0078ff66','1px solid #2aa0ff'],
+          red:   ['#ff004466','1px solid #ff4b6a'],
+          green: ['#12b88666','1px solid #2bd97f'],
+          orange:['#ff7f0066','1px solid #ffae42']
+        };
+        const d = map[color];
+        if(!d){ // restore
+          root.removeProperty('--sel-bg');
+          root.removeProperty('--sel-border');
+          showNotification('Colors restored');
+          return;
         }
-      } else {
-        if(type === 'nav'){
-          const target = li.dataset.target;
-          const ul = submenus[target];
-          if(!ul) return;
-          const title = ul.getAttribute('data-menuid') || 'SUBMENU';
-          openById(target, title, true);
-        } else if (type === 'toggle'){
-          toggleSwitch(li);
-        } else if (type === 'button'){
-          pressButton(li);
-        } else if (type === 'theme'){
-          applyTheme(li.dataset.color);
-          sendToLua({ action:"theme", color: li.dataset.color });
-        }
+        root.setProperty('--sel-bg', d[0]);
+        root.setProperty('--sel-border', d[1]);
+        showNotification(`Color set: ${color}`);
       }
-    }
 
-    function notify(msg, kind='ok'){
-      const note = document.createElement('div');
-      note.className = `notification ${kind}`;
-      note.textContent = msg;
-      notifications.appendChild(note);
-      requestAnimationFrame(()=> note.classList.add('show'));
-      setTimeout(()=>{
-        note.classList.remove('show');
-        setTimeout(()=> note.remove(), 300);
-      },2200);
-    }
-
-    function openFinder(){
-      finder.style.display = 'block';
-      finderInput.value = '';
-      finderInput.focus();
-      sendToLua({action:"startTyping"});
-    }
-
-    function closeFinder(){
-      finder.style.display = 'none';
-      menuEl.focus();
-      sendToLua({action:"stopTyping"});
-    }
-
-    function findAndJump(q){
-      const key = q.trim().toLowerCase();
-      if(!key){ closeFinder(); return; }
-      const entry = featureIndex[key];
-      if(!entry){
-        notify('feature not found','err');
-        closeFinder();
-        return;
+      function showNotification(msg, isError=false){
+        const note = document.createElement('div');
+        note.className = 'notification' + (isError ? ' error' : '');
+        note.textContent = msg;
+        notifications.appendChild(note);
+        requestAnimationFrame(()=> note.classList.add('show'));
+        setTimeout(()=>{
+          note.classList.remove('show');
+          setTimeout(()=> note.remove(), 300);
+        }, 2000);
       }
-      openMain();
-      if (entry.path.includes('ONLINE')) {
-        openById('online-submenu','ONLINE', true);
-        if (entry.path.includes('ONLINE > LIST')) openById('online-list-submenu','ONLINE > LIST', true);
-        if (entry.path.includes('ONLINE > FEATURES')) openById('online-features-submenu','ONLINE > FEATURES', true);
-      } else if (entry.path[0] === 'SELF') {
-        openById('self-submenu','SELF', true);
-      } else if (entry.path[0] === 'COMBAT/WEAPON') {
-        openById('combat-submenu','COMBAT/WEAPON', true);
-      } else if (entry.path[0] === 'VISUAL') {
-        openById('visual-submenu','VISUAL', true);
-      } else if (entry.path[0] === 'VEHICLE') {
-        openById('vehicle-submenu','VEHICLE', true);
-      } else if (entry.path[0] === 'MISCELLANEOUS') {
-        openById('misc-submenu','MISCELLANEOUS', true);
-      } else if (entry.path[0] === 'DESTRUCTIVE') {
-        openById('destructive-submenu','DESTRUCTIVE', true);
-      } else if (entry.path[0] === 'TRIGGERS') {
-        openById('triggers-submenu','TRIGGERS', true);
-      } else if (entry.path[0] === 'SETTINGS') {
-        openById('settings-submenu','SETTINGS', true);
+
+      function setMenuVisible(menu, vis){ menu.style.display = vis ? 'block' : 'none'; }
+
+      function updateTrack(){
+        track.style.top = currentMenu.offsetTop + "px";
+        track.style.height = currentMenu.offsetHeight + "px";
       }
-      const lis = visibleItems(currentMenu);
-      const targetIndex = lis.findIndex(li => (li.dataset.feature||li.textContent).trim().toLowerCase() === key);
-      if (targetIndex >= 0) {
-        index = targetIndex;
+      function updateCapsule(){
+        const li = items[index];
+        const top = currentMenu.offsetTop + li.offsetTop + (li.offsetHeight - capsule.offsetHeight)/2;
+        capsule.style.top = top + 'px';
+      }
+      function updateSelection(){
+        items.forEach(li => li.classList.remove('selected'));
+        if(items[index]) items[index].classList.add('selected');
+        footerCount.textContent = `${index + 1}/${items.length}`;
+        updateTrack();
+        updateCapsule();
+      }
+
+      function openOnly(menu){
+        ALL_MENUS.forEach(m => setMenuVisible(m,false));
+        setMenuVisible(menu,true);
+      }
+
+      function openSubmenu(menu, title){
+        // remember current index before leaving
+        lastIndexById[currentMenu.id] = index;
+        menuStack.push(currentMenu);
+
+        openOnly(menu);
+        currentMenu = menu;
+        items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+        index = lastIndexById[menu.id] || 0;
+        sectionTitle.textContent = title;
         updateSelection();
-        sectionTitle.textContent = currentMenu.getAttribute('data-menuid') || sectionTitle.textContent;
-        notify(`${sectionTitle.textcontent}`,'ok');
       }
-      closeFinder();
-    }
 
-    // LUA -> DUI messages
-    window.addEventListener("message", (event) => {
-      let data = event.data;
-      try { if (typeof data === "string") data = JSON.parse(data); } catch(e) {}
-      if (!data || typeof data !== "object") return;
+      function goBack(){
+        if(menuStack.length === 0) return;
+        // remember where we were in this menu
+        lastIndexById[currentMenu.id] = index;
 
-      if(data.action === "navigate") {
-        if(data.direction === "up") {
-          index = (index - 1 + items.length) % items.length;
-          updateSelection();
+        const prev = menuStack.pop();
+        openOnly(prev);
+        currentMenu = prev;
+        items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+        index = lastIndexById[prev.id] || 0;
+
+        // set title based on which menu we returned to
+        let title = 'HOME';
+        if(prev === selfSubmenu) title = 'SELF';
+        else if(prev === onlineSubmenu) title = 'ONLINE';
+        else if(prev === onlineListSubmenu) title = 'ONLINE > LIST';
+        else if(prev === onlineFeaturesSubmenu) title = 'ONLINE > FEATURES';
+        else if(prev === settingsSubmenu) title = 'SETTINGS';
+
+        sectionTitle.textContent = title;
+        updateSelection();
+      }
+
+      function toggleSwitch(li){
+        const sw = li.querySelector('.switch');
+        if(!sw) return;
+        const on = sw.getAttribute('data-state') === 'on';
+        sw.setAttribute('data-state', on ? 'off' : 'on');
+
+        // Handle special cases
+        if(sw.dataset.role === "select-all"){
+          document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','on'));
+          showNotification("All players selected");
         }
-        if(data.direction === "down") {
+        if(sw.dataset.role === "unselect-all"){
+          document.querySelectorAll('.player-switch').forEach(ps => ps.setAttribute('data-state','off'));
+          showNotification("All players unselected");
+        }
+      }
+
+      function pressButton(li){
+        const btn = li.querySelector('.revive-btn, .feature-btn');
+        if(btn){
+          showNotification("Executed");
+        }
+      }
+
+      function handleEnter(){
+        const li = items[index];
+        const label = li?.innerText?.trim().toLowerCase() || '';
+
+        if(currentMenu === mainMenu){
+          if(label.startsWith('self')) openSubmenu(selfSubmenu,"SELF");
+          else if(label.startsWith('online')) openSubmenu(onlineSubmenu,"ONLINE");
+          else if(label.startsWith('settings')) openSubmenu(settingsSubmenu,"SETTINGS");
+          else if(label.startsWith('find feature')){
+            openFinder();
+          }
+        } else if(currentMenu === onlineSubmenu){
+          if(label.startsWith('list')) openSubmenu(onlineListSubmenu,"ONLINE > LIST");
+          else if(label.startsWith('features')) openSubmenu(onlineFeaturesSubmenu,"ONLINE > FEATURES");
+        } else if(currentMenu === settingsSubmenu){
+          // color buttons
+          if(li.querySelector('.feature-btn')){
+            const c = li.querySelector('.feature-btn').dataset.color;
+            if(c === 'restore') setTheme('restore');
+            else setTheme(c);
+          }
+        } else {
+          if(li.querySelector('.switch')) toggleSwitch(li);
+          else if(li.querySelector('.revive-btn') || li.querySelector('.feature-btn')) pressButton(li);
+        }
+      }
+
+      /* ===== Finder ===== */
+      function openFinder(){
+        finder.style.display = 'block';
+        finderInput.value = '';
+        finderInput.focus();
+      }
+      function closeFinder(){
+        finder.style.display = 'none';
+        menuEl.focus();
+      }
+
+      function getMenuTitleFor(menu){
+        if(menu === mainMenu) return 'HOME';
+        if(menu === selfSubmenu) return 'SELF';
+        if(menu === onlineSubmenu) return 'ONLINE';
+        if(menu === onlineListSubmenu) return 'ONLINE > LIST';
+        if(menu === onlineFeaturesSubmenu) return 'ONLINE > FEATURES';
+        if(menu === settingsSubmenu) return 'SETTINGS';
+        return '';
+      }
+
+      function goToLi(targetLi){
+        // find which UL holds this li
+        const parent = targetLi.closest('ul');
+        // build the path to open
+        if(parent === mainMenu){
+          openOnly(mainMenu);
+          currentMenu = mainMenu;
+          items = [...currentMenu.querySelectorAll('li')];
+          index = items.indexOf(targetLi);
+          sectionTitle.textContent = 'HOME';
+          updateSelection();
+          return;
+        }
+        if(parent === selfSubmenu){
+          // from main -> self
+          menuStack.length = 0; // reset stack to avoid weird states
+          openSubmenu(selfSubmenu,'SELF');
+        } else if(parent === onlineSubmenu){
+          menuStack.length = 0;
+          openSubmenu(onlineSubmenu,'ONLINE');
+        } else if(parent === onlineListSubmenu){
+          menuStack.length = 0;
+          openSubmenu(onlineSubmenu,'ONLINE'); // open parent first
+          openSubmenu(onlineListSubmenu,'ONLINE > LIST');
+        } else if(parent === onlineFeaturesSubmenu){
+          menuStack.length = 0;
+          openSubmenu(onlineSubmenu,'ONLINE'); // open parent first
+          openSubmenu(onlineFeaturesSubmenu,'ONLINE > FEATURES');
+        } else if(parent === settingsSubmenu){
+          menuStack.length = 0;
+          openSubmenu(settingsSubmenu,'SETTINGS');
+        }
+        // select the li
+        items = [...currentMenu.querySelectorAll('li')].filter(li => !li.classList.contains('section'));
+        index = items.indexOf(targetLi);
+        if(index < 0) index = 0;
+        updateSelection();
+
+        // path notice
+        showNotification(getMenuTitleFor(currentMenu), false);
+      }
+
+      function searchAndJump(q){
+        const query = q.trim().toLowerCase();
+        if(!query){
+          showNotification('feature not found', true);
+          return;
+        }
+        // scan all actionable lis (exclude .section)
+        const allLis = ALL_MENUS.flatMap(ul => [...ul.querySelectorAll('li')].filter(li => !li.classList.contains('section')));
+        const hit = allLis.find(li => li.innerText.trim().toLowerCase().includes(query));
+        if(!hit){
+          showNotification('feature not found', true);
+          return;
+        }
+        goToLi(hit);
+        closeFinder();
+        // also show exact LOCATION string like SECTION > SECTION
+        const parent = hit.closest('ul');
+        showNotification(getMenuTitleFor(parent));
+      }
+
+      /* ====== Keyboard ====== */
+      document.addEventListener('keydown', e => {
+        // Finder open state has priority
+        if(finder.style.display === 'block'){
+          if(e.key === 'Escape'){ // close finder with Esc
+            closeFinder();
+            e.preventDefault();
+          } else if(e.key === 'Enter'){
+            searchAndJump(finderInput.value);
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if(e.key === 'ArrowDown'){
           index = (index + 1) % items.length;
           updateSelection();
+          e.preventDefault();
+        } else if(e.key === 'ArrowUp'){
+          index = (index - 1 + items.length) % items.length;
+          updateSelection();
+          e.preventDefault();
+        } else if(e.key === 'Enter'){
+          handleEnter(); // Enter selects or opens finder (when "Find Feature" is selected)
+          e.preventDefault();
+        } else if(e.key === 'Backspace'){
+          // back out of submenus (fixed so Online sub-submenus return to Online)
+          goBack();
+          e.preventDefault();
         }
-      } else if(data.action === "enter") {
-        handleEnter();
-      } else if(data.action === "back") {
-        goBack();
-      }
-    });
+      });
 
-    document.addEventListener('keydown', e=>{
-      if(finder.style.display === 'block'){
-        if(e.key === 'Escape'){ e.preventDefault(); closeFinder(); }
-        else if(e.key === 'Enter'){ e.preventDefault(); findAndJump(finderInput.value); }
-        return;
+      function init(){
+        // show only main on load
+        openOnly(mainMenu);
+        currentMenu = mainMenu;
+        items = [...currentMenu.querySelectorAll('li')];
+        index = 0;
+        sectionTitle.textContent = 'HOME';
+        menuEl.focus();
+        updateSelection();
       }
-      if(e.key === 'ArrowDown'){ e.preventDefault(); index = (index + 1) % items.length; updateSelection(); }
-      else if(e.key === 'ArrowUp'){ e.preventDefault(); index = (index - 1 + items.length) % items.length; updateSelection(); }
-      else if(e.key === 'Enter'){ e.preventDefault(); handleEnter(); }
-      else if(e.key === 'Backspace'){ e.preventDefault(); goBack(); }
-    });
-
-    function init(){
-      if (window.lucide && lucide.createIcons) lucide.createIcons();
-      openMain();
-      items = visibleItems(currentMenu);
-      index = 0; updateSelection();
-      registerFeatures();
-      menuEl.setAttribute('tabindex','0');
-      menuEl.focus();
       window.addEventListener('resize', updateSelection);
-    }
-
-    requestAnimationFrame(init);
-  })();
+      init();
+    };
   </script>
-
-<!-- injected: noclip switch sync (non-invasive) -->
-<script>
-(function(){
-  function findSwitchEl(feature){
-    if (!feature) feature = "noclip";
-    var selectors = [
-      "#" + feature + "-switch",
-      '.switch[data-feature="' + feature + '"]',
-      '[data-feature="' + feature + '"] .switch',
-      '[data-id="' + feature + '-switch"]',
-      '[data-switch="' + feature + '"]'
-    ];
-    for (var i=0;i<selectors.length;i++){
-      var el = document.querySelector(selectors[i]);
-      if (el) return el;
-    }
-    // Fallback: search list items that include the feature name and contain a .switch
-    var nodes = document.querySelectorAll('li, .row, .item, .menu-list li, .submenu li');
-    var needle = String(feature).toLowerCase();
-    for (var j=0;j<nodes.length;j++){
-      var n = nodes[j];
-      var text = (n.textContent || '').toLowerCase();
-      if (text.indexOf(needle) !== -1){
-        var sw = n.querySelector('.switch');
-        if (sw) return sw;
-      }
-    }
-    return null;
-  }
-
-  window.addEventListener("message", function(event){
-    var data = event && event.data;
-    try { if (typeof data === "string") data = JSON.parse(data); } catch(e){ return; }
-    if (!data || data.action !== "setSwitch") return;
-
-    var el = findSwitchEl(data.feature || "noclip");
-    if (el) {
-      el.setAttribute("data-state", data.state ? "on" : "off");
-    }
-  });
-})();
-</script>
-
-
-<!-- ========= HELPER FUNCTIONS FOR EASY CONFIG ========= -->
-<script>
-// Add a new toggle feature to a submenu
-function addToggle(menuId, featureName) {
-  const menu = document.getElementById(menuId);
-  if (!menu) return;
-
-  const li = document.createElement("li");
-  li.dataset.type = "toggle";
-  li.dataset.feature = featureName;
-  li.innerHTML = `
-    <span class="left-content">${featureName}</span>
-    <div class="switch" data-state="off">
-      <div class="knob"><span class="mark">✕</span></div>
-    </div>`;
-
-  menu.appendChild(li);
-}
-
-// Add a new button feature to a submenu
-function addButton(menuId, featureName) {
-  const menu = document.getElementById(menuId);
-  if (!menu) return;
-
-  const li = document.createElement("li");
-  li.dataset.type = "button";
-  li.dataset.feature = featureName;
-  li.innerHTML = `<div class="feature-btn">${featureName}</div>`;
-
-  menu.appendChild(li);
-}
-
-// Add a navigation link to another submenu
-function addNav(menuId, targetId, label) {
-  const menu = document.getElementById(menuId);
-  if (!menu) return;
-
-  const li = document.createElement("li");
-  li.dataset.type = "nav";
-  li.dataset.target = targetId;
-  li.innerHTML = `<div class="left-content">${label}</div><span class="arrow">»</span>`;
-
-  menu.appendChild(li);
-}
-</script>
-
 </body>
 </html>
-
